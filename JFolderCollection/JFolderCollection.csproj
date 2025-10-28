@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>JFolderCollection</RootNamespace>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<Nullable>enable</Nullable>
+
+  <!-- 🔧 Metadados do plugin -->
+  <AssemblyName>JFolderCollection</AssemblyName>
+  <Version>1.0.0.15</Version>
+  <Authors>A. Adbujamil</Authors>
+  <Company>Desenvolvedor Independente</Company>
+  <Description>Plugin for creating collections based on folder structure</Description>
+  <RepositoryUrl>https://github.com/seuusuario/jellyfin-plugin-template</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jellyfin.Controller" Version="10.11.0" />
+    <PackageReference Include="Jellyfin.Model" Version="10.11.0" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<None Remove="Configuration\configPage.html" />
+		<EmbeddedResource Include="Configuration\configPage.html" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="log.txt">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="manifest.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>
