@@ -20,13 +20,11 @@
             : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
-
-            // 🚨 DEBUG CRÍTICO
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [Jellyfin.Plugin.Template] 🎯 PLUGIN CONSTRUIDO!");
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [JFolderCollection] 🎯 PLUGIN CONSTRUIDO!");
         }
 
         /// <inheritdoc />
-        public override string Name => "Template";
+        public override string Name => "JFolderCollection";
 
         /// <inheritdoc />
         public override Guid Id => Guid.Parse("c7b8d1b3-41d9-4a19-b04e-f43534455342");
@@ -42,7 +40,7 @@
         /// <inheritdoc />
         public IEnumerable<PluginPageInfo> GetPages()
         {
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [Jellyfin.Plugin.Template] 📄 GetPages() chamado!");
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [JFolderCollection] 📄 GetPages() chamado!");
 
             return new[]
             {
