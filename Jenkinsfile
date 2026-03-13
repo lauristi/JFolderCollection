@@ -50,6 +50,9 @@ pipeline {
             steps {
                 script {
                     echo "🚀 Injetando no Jellyfin..."
+                    // 1. O PONTO CRUCIAL: Limpa a pasta no servidor antes de enviar os novos arquivos
+                    // Isso remove as DLLs de 2025 que vimos no seu FileZilla
+                    sh "docker exec -u 0 jellyfin sh -c 'rm -rf /config/plugins/JFolderCollection/*'"
                     sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} mkdir -p ${env.INTERNAL_PLUGIN_PATH}"
                     sh "docker cp ./publish/. ${env.JELLYFIN_CONTAINER}:${env.INTERNAL_PLUGIN_PATH}/"
                     sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} chown -R 1000:1000 ${env.INTERNAL_PLUGIN_PATH}"
