@@ -22,7 +22,6 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Configuration\configPage.Original" />
 		<EmbeddedResource Include="Configuration\configPage.html" />
 	</ItemGroup>
 

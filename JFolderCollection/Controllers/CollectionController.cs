@@ -29,12 +29,13 @@
         private readonly ILibraryManager _libraryManager;
         private readonly IHttpClientFactory _httpClientFactory;
 
-        // Nota de Estudo: URLs e chaves fixas devem ser evitadas. 
+        // Nota de Estudo: URLs e chaves fixas devem ser evitadas.
         // Idealmente, o token vem da requisição e o Host do próprio servidor.
         private const string JELLYFIN_URL = "http://192.168.0.157:8096";
+
         private const string API_KEY = "21e58be425b747388de6fcc5f825309d";
 
-        #endregion
+        #endregion Campos Privados e Dependências
 
         #region Construtor
 
@@ -50,7 +51,7 @@
             _httpClientFactory = httpClientFactory;
         }
 
-        #endregion
+        #endregion Construtor
 
         #region Endpoints da API
 
@@ -63,63 +64,54 @@
         /// <param name="posterFolderPath">Caminho físico dos posters.</param>
         /// <param name="deleteAll">Se verdadeiro, apaga todas as coleções antes de iniciar.</param>
         /// <param name="onlyNew">Se verdadeiro, ignora pastas que já possuem uma coleção correspondente no Jellyfin.</param>
+
         [HttpPost("CreateCollections")]
-        public async Task<IActionResult> CreateCollections(
-            [FromQuery] string currentPrefix,
-            [FromQuery] string newPrefix,
-            [FromQuery] string? baseFolderPath,
-            [FromQuery] string? posterFolderPath,
-            [FromQuery] bool deleteAll = false,
-            [FromQuery] bool onlyNew = true)
+        public async Task<IActionResult> CreateCollections([FromBody] CreateCollectionRequest request)
         {
             try
             {
-                _logger.LogInformation("🎬 Starting collection processing. Mode OnlyNew: {OnlyNew}", onlyNew);
+                // Agora usamos request.OnlyNew, request.DeleteAll, etc.
+                _logger.LogInformation("🎬 Starting collection processing. Mode OnlyNew: {OnlyNew}", request.OnlyNew);
 
-                // 1. Limpeza opcional
-                if (deleteAll)
+                if (request.DeleteAll)
                 {
                     DeleteAllCollections();
                 }
 
-                // 2. Resolução de caminhos
                 var config = Plugin.Instance?.Configuration;
-                var finalCollectionsPath = baseFolderPath ?? config?.BaseFolderPath ?? "/mnt/xs1000/Filmes/Filmes Colecoes";
-                var finalPostersPath = posterFolderPath ?? "/mnt/xs1000/Posters/Colecoes";
+                var finalCollectionsPath = request.BaseFolderPath ?? config?.BaseFolderPath;
+                var finalPostersPath = request.PosterFolderPath ?? config?.PosterFolderPath;
 
-                if (!Directory.Exists(finalCollectionsPath))
+                if (string.IsNullOrEmpty(finalCollectionsPath) || !Directory.Exists(finalCollectionsPath))
                 {
                     _logger.LogWarning("❌ Base folder not found: {Path}", finalCollectionsPath);
-                    return NotFound(new { Message = "Diretório base não encontrado." });
+                    return NotFound(new { Message = "Diretório base não encontrado ou não configurado." });
                 }
 
                 var collectionFolders = Directory.GetDirectories(finalCollectionsPath)
                     .Select(p => new { Path = p, Name = Path.GetFileName(p) })
                     .ToList();
 
-                // 3. Loop de processamento
                 foreach (var folder in collectionFolders)
                 {
-                    // Calcula o nome final que a coleção teria
                     var collectionName = folder.Name;
-                    if (!string.IsNullOrWhiteSpace(currentPrefix) && !string.IsNullOrWhiteSpace(newPrefix))
+                    if (!string.IsNullOrWhiteSpace(request.CurrentPrefix) && !string.IsNullOrWhiteSpace(request.NewPrefix))
                     {
-                        collectionName = folder.Name.Replace(currentPrefix, newPrefix);
+                        collectionName = folder.Name.Replace(request.CurrentPrefix, request.NewPrefix);
                     }
 
-                    // Lógica OnlyNew: Verifica se a coleção já existe no banco do Jellyfin
-                    if (onlyNew && CollectionExists(collectionName))
+                    if (request.OnlyNew && CollectionExists(collectionName))
                     {
                         _logger.LogInformation("Skip: Collection '{Name}' already exists.", collectionName);
                         continue;
                     }
 
-                    await ProcessCollectionFolder(folder.Path, folder.Name, currentPrefix, newPrefix, finalPostersPath);
+                    await ProcessCollectionFolder(folder.Path, folder.Name, request.CurrentPrefix, request.NewPrefix, finalPostersPath);
                 }
 
                 await TriggerLibraryScan();
 
-                return Ok(new { Message = $"Processing finished. {collectionFolders.Count} folders evaluated." });
+                return Ok(new { Message = $"Processamento finalizado. {collectionFolders.Count} pastas avaliadas." });
             }
             catch (Exception ex)
             {
@@ -128,8 +120,7 @@
             }
         }
 
-        #endregion
-           
+        #endregion Endpoints da API
 
         #region Lógica de Processamento de Pastas
 
@@ -171,7 +162,7 @@
             await AddImageToCollection(collection, folderName, postersPath);
         }
 
-        #endregion
+        #endregion Lógica de Processamento de Pastas
 
         #region Manipulação de Mídia e Imagens
 
@@ -232,7 +223,7 @@
             return new[] { ".mkv", ".mp4", ".avi", ".mov", ".wmv", ".m4v", ".flv", ".webm" }.Contains(ext);
         }
 
-        #endregion
+        #endregion Manipulação de Mídia e Imagens
 
         #region Gerenciamento de Biblioteca e API Externa
 
@@ -300,8 +291,8 @@
             return _libraryManager.GetItemList(query).Any();
         }
 
-        #endregion
-        #endregion
+        #endregion Private Validation Methods
 
+        #endregion Gerenciamento de Biblioteca e API Externa
     }
 }

@@ -101,133 +101,116 @@
         </div>
 
         <script type="text/javascript">
-            // #region Configurações Iniciais
-            var TemplateConfig = {
-                pluginUniqueId: 'c7b8d1b3-41d9-4a19-b04e-f43534455342'
-            };
-            // #endregion
+            (function () {
+                const pluginId = "c7b8d1b3-41d9-4a19-b04e-f43534455342";
 
-            // #region Funções de Navegação e UI
-            function openDirectoryBrowser(targetInputId) {
-                const input = document.getElementById(targetInputId);
+                // Esta função é o padrão correto para capturar o momento em que a página abre
+                document.querySelector('#TemplateConfigPage').addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
 
-                // O require no Jellyfin pode ser sensível a maiúsculas/minúsculas dependendo da versão
-                require(['directorybrowser'], function (DirectoryBrowser) {
-                    try {
+                    const page = this;
+
+                    // Carregar configurações
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        page.querySelector('#BaseFolderPath').value = config.BaseFolderPath || '';
+                        page.querySelector('#PosterFolderPath').value = config.PosterFolderPath || '';
+                        page.querySelector('#PrefixAtual').value = config.PrefixAtual || '';
+                        page.querySelector('#PrefixNovo').value = config.PrefixNovo || '';
+                        page.querySelector('#ApagarTudo').checked = config.ApagarTudo || false;
+                        page.querySelector('#OnlyNew').checked = config.OnlyNew !== undefined ? config.OnlyNew : true;
+                        Dashboard.hideLoadingMsg();
+                    });
+
+                    // Bind dos Eventos (Diretamente nos elementos da 'page')
+                    page.querySelector('#browseBaseFolder').onclick = function () { openDirectoryBrowser('BaseFolderPath'); };
+                    page.querySelector('#browsePosterFolder').onclick = function () { openDirectoryBrowser('PosterFolderPath'); };
+                    page.querySelector('#createCollectionsBtn').onclick = executeCreateCollections;
+                    page.querySelector('#findDuplicatesBtn').onclick = loadDuplicateMovies;
+
+                    page.querySelector('#TemplateConfigForm').onsubmit = function (e) {
+                        e.preventDefault();
+                        saveSettings(page);
+                        return false;
+                    };
+                });
+
+                function saveSettings(page) {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        config.BaseFolderPath = page.querySelector('#BaseFolderPath').value;
+                        config.PosterFolderPath = page.querySelector('#PosterFolderPath').value;
+                        config.PrefixAtual = page.querySelector('#PrefixAtual').value;
+                        config.PrefixNovo = page.querySelector('#PrefixNovo').value;
+                        config.ApagarTudo = page.querySelector('#ApagarTudo').checked;
+                        config.OnlyNew = page.querySelector('#OnlyNew').checked;
+
+                        ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
+                }
+
+                function executeCreateCollections() {
+                    const deleteAll = document.getElementById('ApagarTudo').checked;
+
+                    // Primeiro Alerta: Confirmação Geral
+                    const mensagemGeral = "Deseja iniciar a criação das coleções agora?";
+                    if (!confirm(mensagemGeral)) return;
+
+                    // Segundo Alerta: Se for apagar tudo, pede confirmação extra
+                    if (deleteAll) {
+                        if (!confirm("⚠️ ATENÇÃO: Você marcou para APAGAR TODAS as coleções existentes. Esta ação não pode ser desfeita. Deseja continuar?")) {
+                            return;
+                        }
+                    }
+
+                    // Se passou pelos alerts, segue a lógica...
+                    const props = {
+                        currentPrefix: document.getElementById('PrefixAtual').value,
+                        newPrefix: document.getElementById('PrefixNovo').value,
+                        baseFolderPath: document.getElementById('BaseFolderPath').value,
+                        posterFolderPath: document.getElementById('PosterFolderPath').value,
+                        deleteAll: deleteAll,
+                        onlyNew: document.getElementById('OnlyNew').checked
+                    };
+
+                    Dashboard.showLoadingMsg();
+                    const url = ApiClient.getUrl('Plugin/Folder/CreateCollections');
+
+                    ApiClient.fetch({
+                        url: url,
+                        type: 'POST',
+                        data: JSON.stringify(props),
+                        contentType: 'application/json'
+                    }).then(function (res) {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert("✅ Operação finalizada!");
+                    }).catch(function (err) {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert("❌ Erro: " + err);
+                    });
+                }
+
+                // Helper do DirectoryBrowser
+                function openDirectoryBrowser(inputId) {
+                    const input = document.getElementById(inputId);
+                    require(['directorybrowser'], function (DirectoryBrowser) {
                         const picker = new DirectoryBrowser();
-
                         picker.show({
                             callback: function (path) {
                                 if (path) {
                                     input.value = path;
-                                    // Dispara o evento de mudança para que o formulário saiba que o valor mudou
-                                    input.dispatchEvent(new Event('change', { bubbles: true }));
                                 }
                                 picker.close();
                             },
-                            header: 'Selecionar Pasta',
-                            instruction: 'Escolha o diretório desejado no servidor.',
-                            path: input.value || '',
+                            path: input.value,
                             validateWriteable: false
                         });
-                    } catch (err) {
-                        console.error("❌ Erro ao instanciar o DirectoryBrowser:", err);
-                        Dashboard.alert("Erro ao abrir o seletor de pastas. Verifique o console.");
-                    }
-                });
-            }
-            // #endregion
-
-            // #region Lógica de Negócio (API Calls)
-
-            // Busca filmes duplicados no caminho informado
-            async function loadDuplicateMovies() {
-                const basePath = document.querySelector('#BaseFolderPath').value;
-                if (!basePath) return Dashboard.alert('⚠️ Informe o caminho base.');
-
-                Dashboard.showLoadingMsg();
-                try {
-                    const response = await ApiClient.getJSON(ApiClient.getUrl('Plugin/Folder/DuplicateMovies', { path: basePath }));
-                    renderDuplicates(response); // Função auxiliar de renderização
-                } catch (e) {
-                    Dashboard.alert("Erro: " + e.message);
-                } finally {
-                    Dashboard.hideLoadingMsg();
+                    });
                 }
-            }
-
-            // Envia comando para o Controller criar as coleções
-            function executeCreateCollections() {
-                const props = {
-                    currentPrefix: document.getElementById('PrefixAtual').value,
-                    newPrefix: document.getElementById('PrefixNovo').value,
-                    baseFolderPath: document.getElementById('BaseFolderPath').value,
-                    posterFolderPath: document.getElementById('PosterFolderPath').value,
-                    deleteAll: document.getElementById('ApagarTudo').checked,
-                    onlyNew: document.getElementById('OnlyNew').checked
-                };
-
-                if (props.deleteAll && !confirm("⚠️ Isso apagará TODAS as coleções. Confirmar?")) return;
-
-                Dashboard.showLoadingMsg();
-                const url = ApiClient.getUrl('Plugin/Folder/CreateCollections', props);
-
-                fetch(url, { method: 'POST', headers: { 'X-Emby-Token': ApiClient.accessToken() } })
-                    .then(r => r.json())
-                    .then(res => {
-                        Dashboard.hideLoadingMsg();
-                        Dashboard.alert("✅ Finalizado: " + res.Message);
-                    })
-                    .catch(err => {
-                        Dashboard.hideLoadingMsg();
-                        Dashboard.alert("❌ Erro na API: " + err.message);
-                    });
-            }
-            // #endregion
-
-            // #region Gerenciamento de Ciclo de Vida do Plugin
-            function loadSettings() {
-                Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
-                    document.querySelector('#BaseFolderPath').value = config.BaseFolderPath || '';
-                    document.querySelector('#PosterFolderPath').value = config.PosterFolderPath || '';
-                    document.querySelector('#PrefixAtual').value = config.PrefixAtual || '';
-                    document.querySelector('#PrefixNovo').value = config.PrefixNovo || '';
-                    document.querySelector('#ApagarTudo').checked = config.ApagarTudo || false;
-                    document.querySelector('#OnlyNew').checked = config.OnlyNew !== undefined ? config.OnlyNew : true;
-                    Dashboard.hideLoadingMsg();
-                });
-            }
-
-            function saveSettings(e) {
-                e.preventDefault();
-                Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
-                    config.BaseFolderPath = document.querySelector('#BaseFolderPath').value;
-                    config.PosterFolderPath = document.querySelector('#PosterFolderPath').value;
-                    config.PrefixAtual = document.querySelector('#PrefixAtual').value;
-                    config.PrefixNovo = document.querySelector('#PrefixNovo').value;
-                    config.ApagarTudo = document.querySelector('#ApagarTudo').checked;
-                    config.OnlyNew = document.querySelector('#OnlyNew').checked;
-
-                    ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
-                        Dashboard.processPluginConfigurationUpdateResult(result);
-                    });
-                });
-            }
-            // #endregion
-
-            // #region Eventos de Interface
-            document.addEventListener('DOMContentLoaded', () => {
-                loadSettings();
-                document.getElementById('browseBaseFolder').addEventListener('click', () => openDirectoryBrowser('BaseFolderPath'));
-                document.getElementById('browsePosterFolder').addEventListener('click', () => openDirectoryBrowser('PosterFolderPath'));
-                document.getElementById('createCollectionsBtn').addEventListener('click', executeCreateCollections);
-                document.getElementById('findDuplicatesBtn').addEventListener('click', loadDuplicateMovies);
-                document.querySelector('#TemplateConfigForm').addEventListener('submit', saveSettings);
-            });
-            // #endregion
+            })();
         </script>
+
     </div>
 </body>
 </html>

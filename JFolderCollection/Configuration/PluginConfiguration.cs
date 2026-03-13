@@ -21,7 +21,7 @@
         AnotherOption,
     }
 
-    #endregion
+    #endregion Enumerações
 
     /// <summary>
     /// Classe que define a estrutura de dados das configurações do plugin.
@@ -55,8 +55,13 @@
         /// Obtém ou define o caminho base do diretório de mídia que o plugin deve processar.
         /// </summary>
         public string BaseFolderPath { get; set; } = string.Empty;
+        public string PosterFolderPath { get; set; } = string.Empty;
+        public string PrefixAtual { get; set; } = string.Empty;
+        public string PrefixNovo { get; set; } = string.Empty;
+        public bool ApagarTudo { get; set; } = false;
+        public bool OnlyNew { get; set; } = true;
 
-        #endregion
+        #endregion Propriedades de Configuração
 
         #region Inicialização
 
@@ -73,8 +78,9 @@
 
             // Caminho padrão conforme estrutura do servidor
             BaseFolderPath = "/mnt/xs1000/Filmes/Filmes Colecoes";
+            PosterFolderPath = "/mnt/xs1000/Filmes/Poster";
         }
 
-        #endregion
+        #endregion Inicialização
     }
 }
