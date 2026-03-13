@@ -8,7 +8,6 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using MediaBrowser.Model.Services; // Adicione esta se necessário para compatibilidade
 
     [ApiController]
     [Route("Plugin/Folder")]
