@@ -127,7 +127,7 @@
 
                     page.querySelector('#createCollectionsBtn').onclick = executeCreateCollections;
                     page.querySelector('#findDuplicatesBtn').onclick = loadDuplicateMovies;
-                    page.querySelector('#findDuplicatesBtn').onclick = loadDuplicateMovies;
+                    page.querySelector('#loadFoldersBtn').onclick = loadFolders;
 
                     page.querySelector('#TemplateConfigForm').onsubmit = function (e) {
                         e.preventDefault();
@@ -205,15 +205,18 @@
 
                 function loadFolders() {
                     const path = document.getElementById('BaseFolderPath').value;
+                    // O Jellyfin resolve as rotas dos plugins via ApiClient
                     const url = ApiClient.getUrl('Plugin/Folder/Subfolders', { path: path });
 
                     Dashboard.showLoadingMsg();
                     ApiClient.getJSON(url).then(function (folders) {
-                        const container = document.getElementById('folderListContainer');
                         const list = document.getElementById('folderList');
                         list.innerHTML = folders.map(f => `<li>${f}</li>`).join('');
-                        container.style.display = 'block';
+                        document.getElementById('folderListContainer').style.display = 'block';
                         Dashboard.hideLoadingMsg();
+                    }).catch(function () {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert("Erro ao listar pastas. Verifique o caminho.");
                     });
                 }
 
