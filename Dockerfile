@@ -2,13 +2,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copia os arquivos da solução e do projeto
+# Copia os arquivos para o container
 COPY . .
 
-# Restaura e publica a DLL
-RUN dotnet publish JFolderCollection.sln -c Release -o /app/publish
+# Ajuste: Apontamos para o .csproj em vez do .sln para evitar o warning NETSDK1194
+RUN dotnet publish JFolderCollection/JFolderCollection.csproj -c Release -o /app/publish
 
-# Estágio de extração: imagem leve apenas para segurar os arquivos
+# Estágio de extração
 FROM alpine:latest
 WORKDIR /app
 COPY --from=build /app/publish .
