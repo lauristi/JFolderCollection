@@ -44,16 +44,20 @@ pipeline {
         stage('03- Deploy & Restart') {
             steps {
                 script {
-                    echo "🚀 Injetando arquivos na pasta limpa..."
-            
-                    // Já que você limpou manualmente, o Jenkins agora só precisa copiar
+                    echo "🧹 Limpando a pasta do plugin no volume mapeado..."
+                    // Limpa direto no container para garantir que o volume no SSD seja afetado
+                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} sh -c 'rm -rf ${env.INTERNAL_PLUGIN_PATH}/*'"
+
+                    echo "🚀 Injetando v1.0.0.${env.BUILD_NUMBER}..."
                     sh "docker cp ./publish/. ${env.JELLYFIN_CONTAINER}:${env.INTERNAL_PLUGIN_PATH}/"
             
-                    // Ajuste de permissão para o usuário 1000 (o sysdba que vimos no FileZilla)
+                    echo "🔑 Ajustando permissões..."
                     sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} chown -R 1000:1000 ${env.INTERNAL_PLUGIN_PATH}"
-            
-                    echo "🔄 Reiniciando Jellyfin para reconhecer o novo Plugin..."
-                    sh "docker restart ${env.JELLYFIN_CONTAINER}"
+
+                    echo "🔄 Forçando o Jellyfin a recarregar..."
+                    // Em vez de apenas 'restart', vamos dar um 'stop' e 'start' para garantir o ciclo completo
+                    sh "docker stop ${env.JELLYFIN_CONTAINER}"
+                    sh "docker start ${env.JELLYFIN_CONTAINER}"
                 }
             }
         }
