@@ -1,7 +1,6 @@
 pipeline {
     agent any
     options {
-        // Isso ajuda a evitar o cache de versões antigas do script
         skipDefaultCheckout(false)
     }
     environment {
@@ -12,7 +11,6 @@ pipeline {
     stages {
         stage('01- Checkout') {
             steps {
-                // Voltamos ao comando padrão, mas com o WipeWorkspace para limpar o cache
                 checkout([$class: 'GitSCM', 
                     branches: scm.branches, 
                     extensions: [[$class: 'WipeWorkspace']], 
@@ -25,11 +23,7 @@ pipeline {
                 script {
                     def fullVersion = "1.0.0.${env.BUILD_NUMBER}"
                     echo "📌 Definindo versão: ${fullVersion}"
-
-                    // Agora na raiz, o Jenkins encontra de primeira
                     sh "sed -i 's/BUILD_VERSION/${fullVersion}/g' manifest.json"
-            
-                    // O HTML continua na subpasta onde o código mora
                     sh "sed -i 's/BUILD_VERSION/${fullVersion}/g' JFolderCollection/Configuration/configPage.html"
                 }
             }
@@ -49,10 +43,12 @@ pipeline {
         stage('03- Deploy & Restart') {
             steps {
                 script {
-                    echo "🚀 Injetando no Jellyfin..."
-                    // 1. O PONTO CRUCIAL: Limpa a pasta no servidor antes de enviar os novos arquivos
-                    // Isso remove as DLLs de 2025 que vimos no seu FileZilla
-                    sh "docker exec -u 0 jellyfin sh -c 'rm -rf /config/plugins/JFolderCollection/*'"
+                    echo "🧹 FAXINA: Removendo lixo antigo de ${env.INTERNAL_PLUGIN_PATH}..."
+                    
+                    // O golpe de misericórdia nas DLLs de 2025:
+                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} sh -c 'rm -rf ${env.INTERNAL_PLUGIN_PATH}/*'"
+                    
+                    echo "🚀 Injetando v1.0.0.${env.BUILD_NUMBER} no Jellyfin..."
                     sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} mkdir -p ${env.INTERNAL_PLUGIN_PATH}"
                     sh "docker cp ./publish/. ${env.JELLYFIN_CONTAINER}:${env.INTERNAL_PLUGIN_PATH}/"
                     sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} chown -R 1000:1000 ${env.INTERNAL_PLUGIN_PATH}"
