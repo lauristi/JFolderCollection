@@ -6,7 +6,7 @@
         JELLYFIN_CONTAINER = 'jellyfin'
         INTERNAL_PLUGIN_PATH = "/config/plugins/${PROJECT_NAME}"
         // Imagem oficial da Microsoft que já tem tudo para compilar C#
-        DOTNET_SDK_IMAGE = 'mcr.microsoft.com/dotnet/sdk:8.0'
+        DOTNET_SDK_IMAGE = 'mcr.microsoft.com/dotnet/sdk:9.0'
     }
 
     stages {
