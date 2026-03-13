@@ -38,27 +38,7 @@
                             <div class="fieldDescription">Pasta contendo os arquivos .png (mesmo nome da pasta do filme).</div>
                         </div>
                     </div>
-                    <div class="verticalSection">
-                        <h2 class="sectionTitle">Ferramentas</h2>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-                            <button id="loadFoldersBtn" is="emby-button" type="button" class="raised emby-button">
-                                <span>Listar Pastas</span>
-                            </button>
-                            <button id="findDuplicatesBtn" is="emby-button" type="button" class="raised emby-button" style="background-color: #ff6b6b;">
-                                <span>Buscar Duplicados</span>
-                            </button>
-                        </div>
 
-                        <div id="folderListContainer" style="display: none; margin-bottom: 20px;">
-                            <div class="paperList" style="max-height: 300px; overflow-y: auto;">
-                                <ul id="folderList" class="itemsContainer vertical-list"></ul>
-                            </div>
-                        </div>
-
-                        <div id="duplicatesListContainer" style="display: none; margin-bottom: 20px;">
-                            <div id="duplicatesList" class="itemsContainer vertical-list"></div>
-                        </div>
-                    </div>
                     <div class="verticalSection">
                         <h2 class="sectionTitle">Regras de Processamento</h2>
 
@@ -85,15 +65,39 @@
                                 <span>Apagar todas as coleções atuais antes de criar</span>
                             </label>
                         </div>
-
                     </div>
-                    <div style="margin-top: 2em;">
+
+                    <div class="verticalSection">
+                        <button id="createCollectionsBtn" is="emby-button" type="button" class="raised block emby-button" style="background-color: #2e7d32; color: white; padding: 0.8em; font-weight: bold;">
+                            <span>EXECUTAR CRIAÇÃO DE COLEÇÕES</span>
+                        </button>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h2 class="sectionTitle">Ferramentas</h2>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                            <button id="loadFoldersBtn" is="emby-button" type="button" class="raised emby-button">
+                                <span>Listar Pastas</span>
+                            </button>
+                            <button id="findDuplicatesBtn" is="emby-button" type="button" class="raised emby-button" style="background-color: #2e7d32; color: white;">
+                                <span>Buscar Duplicados</span>
+                            </button>
+                        </div>
+
+                        <div id="folderListContainer" style="display: none; margin-bottom: 20px;">
+                            <div class="paperList" style="max-height: 300px; overflow-y: auto;">
+                                <ul id="folderList" class="itemsContainer vertical-list"></ul>
+                            </div>
+                        </div>
+
+                        <div id="duplicatesListContainer" style="display: none; margin-bottom: 20px;">
+                            <div id="duplicatesList" class="itemsContainer vertical-list"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 2em; border-top: 1px solid #333; padding-top: 1em;">
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Salvar Configurações</span>
-                        </button>
-
-                        <button id="createCollectionsBtn" is="emby-button" type="button" class="raised button-submit block emby-button" style="margin-top: 10px; background: var(--accent-color);">
-                            <span>EXECUTAR CRIAÇÃO DE COLEÇÕES</span>
                         </button>
                     </div>
                 </form>
@@ -104,13 +108,10 @@
             (function () {
                 const pluginId = "c7b8d1b3-41d9-4a19-b04e-f43534455342";
 
-                // Esta função é o padrão correto para capturar o momento em que a página abre
                 document.querySelector('#TemplateConfigPage').addEventListener('pageshow', function () {
                     Dashboard.showLoadingMsg();
-
                     const page = this;
 
-                    // Carregar configurações
                     ApiClient.getPluginConfiguration(pluginId).then(function (config) {
                         page.querySelector('#BaseFolderPath').value = config.BaseFolderPath || '';
                         page.querySelector('#PosterFolderPath').value = config.PosterFolderPath || '';
@@ -121,10 +122,11 @@
                         Dashboard.hideLoadingMsg();
                     });
 
-                    // Bind dos Eventos (Diretamente nos elementos da 'page')
                     page.querySelector('#browseBaseFolder').onclick = function () { openDirectoryBrowser('BaseFolderPath'); };
                     page.querySelector('#browsePosterFolder').onclick = function () { openDirectoryBrowser('PosterFolderPath'); };
+
                     page.querySelector('#createCollectionsBtn').onclick = executeCreateCollections;
+                    page.querySelector('#findDuplicatesBtn').onclick = loadDuplicateMovies;
                     page.querySelector('#findDuplicatesBtn').onclick = loadDuplicateMovies;
 
                     page.querySelector('#TemplateConfigForm').onsubmit = function (e) {
@@ -152,19 +154,14 @@
 
                 function executeCreateCollections() {
                     const deleteAll = document.getElementById('ApagarTudo').checked;
+                    if (!confirm("Deseja iniciar a criação das coleções agora?")) return;
 
-                    // Primeiro Alerta: Confirmação Geral
-                    const mensagemGeral = "Deseja iniciar a criação das coleções agora?";
-                    if (!confirm(mensagemGeral)) return;
-
-                    // Segundo Alerta: Se for apagar tudo, pede confirmação extra
                     if (deleteAll) {
-                        if (!confirm("⚠️ ATENÇÃO: Você marcou para APAGAR TODAS as coleções existentes. Esta ação não pode ser desfeita. Deseja continuar?")) {
+                        if (!confirm("⚠️ ATENÇÃO: Você marcou para APAGAR TODAS as coleções existentes. Deseja continuar?")) {
                             return;
                         }
                     }
 
-                    // Se passou pelos alerts, segue a lógica...
                     const props = {
                         currentPrefix: document.getElementById('PrefixAtual').value,
                         newPrefix: document.getElementById('PrefixNovo').value,
@@ -191,16 +188,13 @@
                     });
                 }
 
-                // Helper do DirectoryBrowser
                 function openDirectoryBrowser(inputId) {
                     const input = document.getElementById(inputId);
                     require(['directorybrowser'], function (DirectoryBrowser) {
                         const picker = new DirectoryBrowser();
                         picker.show({
                             callback: function (path) {
-                                if (path) {
-                                    input.value = path;
-                                }
+                                if (path) { input.value = path; }
                                 picker.close();
                             },
                             path: input.value,
@@ -208,9 +202,47 @@
                         });
                     });
                 }
+
+                function loadFolders() {
+                    const path = document.getElementById('BaseFolderPath').value;
+                    const url = ApiClient.getUrl('Plugin/Folder/Subfolders', { path: path });
+
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getJSON(url).then(function (folders) {
+                        const container = document.getElementById('folderListContainer');
+                        const list = document.getElementById('folderList');
+                        list.innerHTML = folders.map(f => `<li>${f}</li>`).join('');
+                        container.style.display = 'block';
+                        Dashboard.hideLoadingMsg();
+                    });
+                }
+
+                function loadDuplicateMovies() {
+                    const path = document.getElementById('BaseFolderPath').value;
+                    const url = ApiClient.getUrl('Plugin/Folder/DuplicateMovies', { path: path });
+
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getJSON(url).then(function (result) {
+                        const container = document.getElementById('duplicatesListContainer');
+                        const list = document.getElementById('duplicatesList');
+
+                        if (result.Duplicates.length === 0) {
+                            list.innerHTML = '<p>Nenhum duplicado encontrado.</p>';
+                        } else {
+                            list.innerHTML = result.Duplicates.map(d => `
+                <div style="margin-bottom:10px; border-bottom:1px solid #444;">
+                    <strong>${d.MovieName}</strong> (${d.Count} cópias)<br/>
+                    <small>${d.Locations.join('<br/>')}</small>
+                </div>
+            `).join('');
+                        }
+                        container.style.display = 'block';
+                        Dashboard.hideLoadingMsg();
+                    });
+                }
+
             })();
         </script>
-
     </div>
 </body>
 </html>

@@ -8,217 +8,97 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using MediaBrowser.Model.Services; // Adicione esta se necessário para compatibilidade
 
-    /// <summary>
-    /// Controller responsável por listar subpastas do plugin.
-    /// </summary>
     [ApiController]
     [Route("Plugin/Folder")]
+    // Removi comentários extensos para focar no código
     public class FolderController : ControllerBase
     {
         private readonly PluginConfiguration _config;
         private readonly ILogger<FolderController> _logger;
         private readonly string _logFile;
-        private readonly string pluginName = "JFolderCollection";
-        private readonly string logFileName = "log.txt";
 
-        /// <summary>
-        /// Construtor do controller.
-        /// </summary>
         public FolderController(IApplicationPaths appPaths, IConfigurationManager configurationManager, ILogger<FolderController> logger)
         {
-            _logFile = Path.Combine(appPaths.PluginsPath, pluginName, logFileName);
+            _logFile = Path.Combine(appPaths.PluginsPath, "JFolderCollection", "log.txt");
             _logger = logger;
 
-            // 🚨 DEBUG CRÍTICO
-            _logger.LogInformation("🚨 FolderController CONSTRUIDO!");
-
-            try
-            {
-                // Carrega a configuração salva do plugin, ou cria uma nova padrão se não existir
-                _config = configurationManager.GetConfiguration<PluginConfiguration>(
-                                                                                      nameof(PluginConfiguration)
-                                                                                     ) ?? new PluginConfiguration();
-
-                _logger.LogInformation("✅ Configuração carregada: {BasePath}", _config.BaseFolderPath);
-
-                // Teste de escrita no log
-                System.IO.File.AppendAllText(_logFile, $"{DateTime.Now}: Controller inicializado\n");
-                _logger.LogInformation("✅ Teste de escrita no arquivo realizado");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Erro no construtor do FolderController");
-                _config = new PluginConfiguration();
-            }
+            _config = configurationManager.GetConfiguration<PluginConfiguration>(nameof(PluginConfiguration))
+                      ?? new PluginConfiguration();
         }
 
-        /// <summary>
-        /// Retorna a lista de subpastas de um caminho.
-        /// </summary>
-        /// <param name="path">Caminho opcional, usa BaseFolderPath se nulo.</param>
+        // Endpoint: Plugin/Folder/Subfolders
         [HttpGet("Subfolders")]
-        public IActionResult GetSubfolders([FromQuery] string? path = null)
+        public ActionResult<List<string>> GetSubfolders([FromQuery] string? path = null)
         {
-            _logger.LogInformation("🔍 GetSubfolders chamado - path: '{Path}'", path ?? "null");
-
             try
             {
-                string basePath = _config.BaseFolderPath ?? "/mnt/xs1000/Filmes Colecoes";
-                string targetPath = string.IsNullOrWhiteSpace(path) ? basePath : path;
-
-                _logger.LogInformation("📂 BasePath config: '{BasePath}'", basePath);
-                _logger.LogInformation("📂 TargetPath final: '{TargetPath}'", targetPath);
-
-                // Sanitiza caminho
-                targetPath = Path.GetFullPath(targetPath);
-                _logger.LogInformation("📂 Path sanitizado: '{TargetPath}'", targetPath);
-
-                // Escreve no arquivo de log
-                System.IO.File.AppendAllText(_logFile, $"{DateTime.Now}: GetSubfolders - path: '{path}', final: '{targetPath}'\n");
+                // Prioriza o path vindo da query, senão usa o da config, senão o default
+                string targetPath = !string.IsNullOrWhiteSpace(path) ? path : (_config.BaseFolderPath ?? "/mnt/xs1000/Filmes Colecoes");
 
                 if (!Directory.Exists(targetPath))
-                {
-                    _logger.LogWarning("❌ Diretório não encontrado: {TargetPath}", targetPath);
-                    System.IO.File.AppendAllText(_logFile, $"{DateTime.Now}: Diretório não encontrado: {targetPath}\n");
-                    return NotFound(new { Message = $"Diretório não encontrado: {targetPath}" });
-                }
-
-                _logger.LogInformation("✅ Diretório existe: {TargetPath}", targetPath);
+                    return NotFound(new { Message = "Diretório não encontrado" });
 
                 var subfolders = Directory.GetDirectories(targetPath)
                     .Select(Path.GetFileName)
-                    .Where(name => !string.IsNullOrWhiteSpace(name))
                     .ToList();
-
-                _logger.LogInformation("📁 Subpastas encontradas: {Count} pastas", subfolders.Count);
-                _logger.LogInformation("📁 Lista: {Folders}", string.Join(", ", subfolders));
-
-                System.IO.File.AppendAllText(_logFile, $"{DateTime.Now}: Subpastas encontradas: {string.Join(", ", subfolders)}\n");
 
                 return Ok(subfolders);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 ERRO em GetSubfolders");
-                System.IO.File.AppendAllText(_logFile, $"{DateTime.Now}: ERRO - {ex.Message}\n{ex.StackTrace}\n");
-                return StatusCode(500, new { Message = "Erro interno ao listar pastas." });
+                _logger.LogError(ex, "Erro ao listar pastas");
+                return StatusCode(500, ex.Message);
             }
         }
 
-        /// <summary>
-        /// Retorna uma lista de filmes duplicados baseado no nome do arquivo.
-        /// </summary>
-        /// <param name="path">Caminho opcional, usa BaseFolderPath se nulo.</param>
+        // Endpoint: Plugin/Folder/DuplicateMovies
         [HttpGet("DuplicateMovies")]
-        public IActionResult GetDuplicateMovies([FromQuery] string? path = null)
+        public ActionResult GetDuplicateMovies([FromQuery] string? path = null)
         {
-            _logger.LogInformation("🎬 GetDuplicateMovies chamado - path: '{Path}'", path ?? "null");
-
             try
             {
-                string basePath = _config.BaseFolderPath ?? "/mnt/xs1000/Filmes Colecoes";
-                string targetPath = string.IsNullOrWhiteSpace(path) ? basePath : path;
-
-                _logger.LogInformation("📂 TargetPath final: '{TargetPath}'", targetPath);
-
-                // Sanitiza caminho
-                targetPath = Path.GetFullPath(targetPath);
-                _logger.LogInformation("📂 Path sanitizado: '{TargetPath}'", targetPath);
-
-                // Escreve no arquivo de log
-                System.IO.File.AppendAllText(_logFile, $"{DateTime.Now}: GetDuplicateMovies - path: '{path}', final: '{targetPath}'\n");
+                string targetPath = !string.IsNullOrWhiteSpace(path) ? path : (_config.BaseFolderPath ?? "/mnt/xs1000/Filmes Colecoes");
 
                 if (!Directory.Exists(targetPath))
-                {
-                    _logger.LogWarning("❌ Diretório não encontrado: {TargetPath}", targetPath);
-                    System.IO.File.AppendAllText(_logFile, $"{DateTime.Now}: Diretório não encontrado: {targetPath}\n");
-                    return NotFound(new { Message = $"Diretório não encontrado: {targetPath}" });
-                }
+                    return NotFound(new { Message = "Diretório não encontrado" });
 
-                _logger.LogInformation("✅ Diretório existe: {TargetPath}", targetPath);
-
-                // Busca recursivamente por arquivos de vídeo
                 var videoExtensions = new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpg", ".mpeg" };
-                var allMovies = new List<MovieFile>();
 
-                // Busca em todas as subpastas
-                var allDirectories = Directory.GetDirectories(targetPath, "*", SearchOption.AllDirectories);
-                _logger.LogInformation("📁 Total de diretórios encontrados: {Count}", allDirectories.Length);
-
-                foreach (var directory in allDirectories)
-                {
-                    try
+                // Busca recursiva
+                var allMovies = Directory.GetFiles(targetPath, "*.*", SearchOption.AllDirectories)
+                    .Where(file => videoExtensions.Contains(Path.GetExtension(file).ToLowerInvariant()))
+                    .Select(file => new MovieFile
                     {
-                        var files = Directory.GetFiles(directory)
-                            .Where(file => videoExtensions.Contains(Path.GetExtension(file).ToLowerInvariant()))
-                            .Select(file => new MovieFile
-                            {
-                                FileName = Path.GetFileNameWithoutExtension(file),
-                                FullPath = file,
-                                Directory = directory
-                            });
+                        FileName = Path.GetFileNameWithoutExtension(file),
+                        FullPath = file,
+                        Directory = Path.GetDirectoryName(file) ?? ""
+                    }).ToList();
 
-                        allMovies.AddRange(files);
-                    }
-                    catch (Exception ex)
+                var duplicates = allMovies
+                    .GroupBy(m => m.FileName, StringComparer.OrdinalIgnoreCase)
+                    .Where(g => g.Count() > 1)
+                    .Select(g => new
                     {
-                        _logger.LogWarning(ex, "⚠️ Erro ao acessar diretório: {Directory}", directory);
-                    }
-                }
-
-                _logger.LogInformation("🎬 Total de filmes encontrados: {Count}", allMovies.Count);
-
-                // Encontra duplicados usando LINQ
-                var duplicateGroups = allMovies
-                    .GroupBy(movie => movie.FileName, StringComparer.OrdinalIgnoreCase)
-                    .Where(group => group.Count() > 1)
-                    .ToList();
-
-                _logger.LogInformation("🔍 Grupos de duplicados encontrados: {Count}", duplicateGroups.Count);
-
-                var result = duplicateGroups.Select(group => new
-                {
-                    MovieName = group.Key,
-                    Count = group.Count(),
-                    Locations = group.Select(movie => new
-                    {
-                        movie.FullPath,
-                        movie.Directory
-                    }).ToList()
-                }).ToList();
-
-                // Log dos resultados
-                foreach (var duplicate in result)
-                {
-                    _logger.LogInformation("📝 Duplicado: {MovieName} - {Count} cópias", duplicate.MovieName, duplicate.Count);
-                    foreach (var location in duplicate.Locations)
-                    {
-                        _logger.LogInformation("   📍 {Path}", location.FullPath);
-                    }
-                }
-
-                System.IO.File.AppendAllText(_logFile,
-                    $"{DateTime.Now}: DuplicateMovies - {result.Count} filmes duplicados encontrados\n");
+                        MovieName = g.Key,
+                        Count = g.Count(),
+                        Locations = g.Select(m => m.FullPath).ToList()
+                    }).ToList();
 
                 return Ok(new
                 {
                     TotalMoviesScanned = allMovies.Count,
-                    DuplicateMoviesCount = result.Count,
-                    Duplicates = result
+                    Duplicates = duplicates
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 ERRO em GetDuplicateMovies");
-                System.IO.File.AppendAllText(_logFile, $"{DateTime.Now}: ERRO em GetDuplicateMovies - {ex.Message}\n{ex.StackTrace}\n");
-                return StatusCode(500, new { Message = "Erro interno ao buscar filmes duplicados." });
+                _logger.LogError(ex, "Erro ao buscar duplicados");
+                return StatusCode(500, ex.Message);
             }
         }
 
-        /// <summary>
-        /// Classe auxiliar para representar um arquivo de filme.
-        /// </summary>
         private class MovieFile
         {
             public string FileName { get; set; } = string.Empty;
