@@ -37,7 +37,7 @@ pipeline {
         stage('03- Deploy') {
             steps {
                 script {
-                    echo "📦 Injetando DLL no Jellyfin..."
+                    echo "📦 Injetando DLL no Jellyfin."
                     
                     // 1. Garante a pasta no Jellyfin
                     sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} mkdir -p ${env.INTERNAL_PLUGIN_PATH}"
