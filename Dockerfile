@@ -14,7 +14,8 @@ RUN dotnet publish JFolderCollection/JFolderCollection.csproj \
     -c Release \
     -o /app/publish \
     /p:Version=${VERSION} \
-    --no-self-contained
+    --no-self-contained \
+    /p:CopyLocalLockFileAssemblies=false
 
 # Copia o manifest.json para a pasta de publicação antes da extração final
 # Usamos o caminho relativo conforme sua nova estrutura na raiz
