@@ -233,17 +233,166 @@
                             list.innerHTML = '<p>Nenhum duplicado encontrado.</p>';
                         } else {
                             list.innerHTML = result.Duplicates.map(d => `
-                <div style="margin-bottom:10px; border-bottom:1px solid #444;">
-                    <strong>${d.MovieName}</strong> (${d.Count} cópias)<br/>
-                    <small>${d.Locations.join('<br/>')}</small>
-                </div>
-            `).join('');
+                        <div style="margin-bottom:10px; border-bottom:1px solid #444;">
+                            <strong>${d.MovieName}</strong> (${d.Count} cópias)<br />
+                            <small>${d.Locations.join('<br />')}</small>
+                        </div>
+                    `).join('');
                         }
                         container.style.display = 'block';
                         Dashboard.hideLoadingMsg();
                     });
                 }
 
+            })();
+        </script>
+        <script type="text/javascript">
+            (function () {
+                const pluginId = "c7b8d1b3-41d9-4a19-b04e-f43534455342";
+
+                document.querySelector('#TemplateConfigPage').addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    const page = this;
+
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        page.querySelector('#BaseFolderPath').value = config.BaseFolderPath || '';
+                        page.querySelector('#PosterFolderPath').value = config.PosterFolderPath || '';
+                        page.querySelector('#PrefixAtual').value = config.PrefixAtual || '';
+                        page.querySelector('#PrefixNovo').value = config.PrefixNovo || '';
+                        page.querySelector('#ApagarTudo').checked = config.ApagarTudo || false;
+                        page.querySelector('#OnlyNew').checked = config.OnlyNew !== undefined ? config.OnlyNew : true;
+                        Dashboard.hideLoadingMsg();
+                    });
+
+                    page.querySelector('#browseBaseFolder').onclick = function () { openDirectoryBrowser(page, 'BaseFolderPath'); };
+                    page.querySelector('#browsePosterFolder').onclick = function () { openDirectoryBrowser(page, 'PosterFolderPath'); };
+
+                    page.querySelector('#createCollectionsBtn').onclick = executeCreateCollections;
+                    page.querySelector('#findDuplicatesBtn').onclick = loadDuplicateMovies;
+                    page.querySelector('#loadFoldersBtn').onclick = loadFolders;
+
+                    page.querySelector('#TemplateConfigForm').onsubmit = function (e) {
+                        e.preventDefault();
+                        saveSettings(page);
+                        return false;
+                    };
+                });
+
+                function saveSettings(page) {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        config.BaseFolderPath = page.querySelector('#BaseFolderPath').value;
+                        config.PosterFolderPath = page.querySelector('#PosterFolderPath').value;
+                        config.PrefixAtual = page.querySelector('#PrefixAtual').value;
+                        config.PrefixNovo = page.querySelector('#PrefixNovo').value;
+                        config.ApagarTudo = page.querySelector('#ApagarTudo').checked;
+                        config.OnlyNew = page.querySelector('#OnlyNew').checked;
+
+                        ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
+                }
+
+                function executeCreateCollections() {
+                    const deleteAll = document.getElementById('ApagarTudo').checked;
+                    if (!confirm("Deseja iniciar a criação das coleções agora?")) return;
+
+                    if (deleteAll && !confirm("⚠️ ATENÇÃO: Você marcou para APAGAR TODAS as coleções existentes. Deseja continuar?")) {
+                        return;
+                    }
+
+                    const props = {
+                        currentPrefix: document.getElementById('PrefixAtual').value,
+                        newPrefix: document.getElementById('PrefixNovo').value,
+                        baseFolderPath: document.getElementById('BaseFolderPath').value,
+                        posterFolderPath: document.getElementById('PosterFolderPath').value,
+                        deleteAll: deleteAll,
+                        onlyNew: document.getElementById('OnlyNew').checked
+                    };
+
+                    Dashboard.showLoadingMsg();
+                    const url = ApiClient.getUrl('Plugin/Folder/CreateCollections');
+
+                    ApiClient.fetch({
+                        url: url,
+                        type: 'POST',
+                        data: JSON.stringify(props),
+                        contentType: 'application/json'
+                    }).then(function () {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert("✅ Operação finalizada!");
+                    }).catch(function (err) {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert("❌ Erro: " + err);
+                    });
+                }
+
+                function openDirectoryBrowser(page, inputId) {
+                    const input = page.querySelector('#' + inputId);
+                    // Jellyfin 10.8+ utiliza o sistema global para abrir o seletor
+                    window.require(['directorybrowser'], function (DirectoryBrowser) {
+                        const picker = new DirectoryBrowser();
+                        picker.show({
+                            callback: function (path) {
+                                if (path) {
+                                    input.value = path;
+                                }
+                                picker.close();
+                            },
+                            path: input.value,
+                            validateWriteable: false
+                        });
+                    });
+                }
+
+                function loadFolders() {
+                    const path = document.getElementById('BaseFolderPath').value;
+                    const url = ApiClient.getUrl('Plugin/Folder/Subfolders', { path: path });
+
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getJSON(url).then(function (folders) {
+                        const list = document.getElementById('folderList');
+                        let html = '';
+                        for (let i = 0; i < folders.length; i++) {
+                            html += '<li>' + folders[i] + '</li>';
+                        }
+                        list.innerHTML = html;
+                        document.getElementById('folderListContainer').style.display = 'block';
+                        Dashboard.hideLoadingMsg();
+                    }).catch(function () {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert("Erro ao listar pastas. Verifique o caminho.");
+                    });
+                }
+
+                function loadDuplicateMovies() {
+                    const path = document.getElementById('BaseFolderPath').value;
+                    const url = ApiClient.getUrl('Plugin/Folder/DuplicateMovies', { path: path });
+
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getJSON(url).then(function (result) {
+                        const list = document.getElementById('duplicatesList');
+                        if (!result.Duplicates || result.Duplicates.length === 0) {
+                            list.innerHTML = '<p>Nenhum duplicado encontrado.</p>';
+                        } else {
+                            let html = '';
+                            for (let i = 0; i < result.Duplicates.length; i++) {
+                                const d = result.Duplicates[i];
+                                html += '<div style="margin-bottom:10px; border-bottom:1px solid #444; padding-bottom:5px;">';
+                                html += '<strong>' + d.MovieName + '</strong> (' + d.Count + ' cópias)<br />';
+                                html += '<small style="color:#aaa;">' + d.Locations.join('<br />') + '</small>';
+                                html += '</div>';
+                            }
+                            list.innerHTML = html;
+                        }
+                        document.getElementById('duplicatesListContainer').style.display = 'block';
+                        Dashboard.hideLoadingMsg();
+                    }).catch(function () {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert("Erro ao buscar duplicados.");
+                    });
+                }
             })();
         </script>
     </div>

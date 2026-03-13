@@ -1,17 +1,14 @@
-﻿namespace Jellyfin.Plugin.Template.Controllers
-{
-    using JFolderCollection.Configuration;
-    using MediaBrowser.Common.Configuration;
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Extensions.Logging;
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
+﻿using JFolderCollection.Configuration;
+using MediaBrowser.Common.Configuration;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System.Net.Mime;
 
+namespace Jellyfin.Plugin.Template.Controllers
+{
     [ApiController]
     [Route("Plugin/Folder")]
-    // Removi comentários extensos para focar no código
+    [Produces(MediaTypeNames.Application.Json)]
     public class FolderController : ControllerBase
     {
         private readonly PluginConfiguration _config;
@@ -27,34 +24,41 @@
                       ?? new PluginConfiguration();
         }
 
-        // Endpoint: Plugin/Folder/Subfolders
+        /// <summary>
+        /// Retorna a lista de subpastas.
+        /// </summary>
         [HttpGet("Subfolders")]
-        public ActionResult<List<string>> GetSubfolders([FromQuery] string? path = null)
+        public IActionResult GetSubfolders([FromQuery] string? path = null)
         {
             try
             {
-                // Prioriza o path vindo da query, senão usa o da config, senão o default
                 string targetPath = !string.IsNullOrWhiteSpace(path) ? path : (_config.BaseFolderPath ?? "/mnt/xs1000/Filmes Colecoes");
 
                 if (!Directory.Exists(targetPath))
+                {
+                    _logger.LogWarning("Diretório não encontrado: {Path}", targetPath);
                     return NotFound(new { Message = "Diretório não encontrado" });
+                }
 
                 var subfolders = Directory.GetDirectories(targetPath)
                     .Select(Path.GetFileName)
+                    .Where(name => !string.IsNullOrEmpty(name))
                     .ToList();
 
                 return Ok(subfolders);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao listar pastas");
-                return StatusCode(500, ex.Message);
+                _logger.LogError(ex, "Erro ao listar pastas em {Path}", path);
+                return StatusCode(500, new { Message = ex.Message });
             }
         }
 
-        // Endpoint: Plugin/Folder/DuplicateMovies
+        /// <summary>
+        /// Retorna filmes duplicados.
+        /// </summary>
         [HttpGet("DuplicateMovies")]
-        public ActionResult GetDuplicateMovies([FromQuery] string? path = null)
+        public IActionResult GetDuplicateMovies([FromQuery] string? path = null)
         {
             try
             {
@@ -65,7 +69,6 @@
 
                 var videoExtensions = new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpg", ".mpeg" };
 
-                // Busca recursiva
                 var allMovies = Directory.GetFiles(targetPath, "*.*", SearchOption.AllDirectories)
                     .Where(file => videoExtensions.Contains(Path.GetExtension(file).ToLowerInvariant()))
                     .Select(file => new MovieFile
@@ -94,7 +97,7 @@
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro ao buscar duplicados");
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, new { Message = ex.Message });
             }
         }
 
