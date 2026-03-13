@@ -23,9 +23,9 @@
                     
                     // Este comando roda um container do .NET, monta o código dentro dele, 
                     // compila e salva o resultado na pasta ./publish do seu host.
-                    sh """
+                   sh """
                         docker run --rm \
-                        -v \$(pwd):/src \
+                        -v "\$(pwd):/src" \
                         -w /src \
                         ${env.DOTNET_SDK_IMAGE} \
                         dotnet publish ${env.PROJECT_NAME}/${env.PROJECT_NAME}.csproj -c Release -o ./publish
