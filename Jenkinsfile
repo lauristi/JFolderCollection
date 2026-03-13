@@ -37,7 +37,7 @@ pipeline {
             steps {
                 script {
                     echo "🛠️ Compilando via Dockerfile..."
-                    sh "docker build --no-cache -t jfolder-builder:latest ."
+                    sh "docker build --no-cache --build-arg VERSION=1.0.0.${env.BUILD_NUMBER} -t jfolder-builder:latest ."
                     sh "docker create --name temp-jfolder jfolder-builder:latest"
                     sh "mkdir -p ./publish"
                     sh "docker cp temp-jfolder:/app/. ./publish"
