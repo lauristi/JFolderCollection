@@ -6,7 +6,7 @@ WORKDIR /src
 COPY . .
 
 # Ajuste: Apontamos para o .csproj em vez do .sln para evitar o warning NETSDK1194
-RUN dotnet publish JFolderCollection/JFolderCollection.csproj -c Release -o /app/publish
+RUN dotnet publish --no-self-contained JFolderCollection/JFolderCollection.csproj -c Release -o /app/publish
 
 # Copiado manifest.json para o diretório de publicação
 COPY manifest.json /app/publish/
