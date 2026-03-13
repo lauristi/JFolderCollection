@@ -44,19 +44,22 @@ pipeline {
         stage('03- Deploy & Restart') {
             steps {
                 script {
-                    echo "🧹 Limpando a pasta do plugin no volume mapeado..."
-                    // Limpa direto no container para garantir que o volume no SSD seja afetado
-                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} sh -c 'rm -rf ${env.INTERNAL_PLUGIN_PATH}/*'"
+                    echo "🛑 Parando Jellyfin para limpeza profunda..."
+                    sh "docker stop ${env.JELLYFIN_CONTAINER}"
+
+                    echo "🔥 OPERAÇÃO TERRA ARRASADA: Removendo e recriando a pasta do plugin..."
+                    // Removemos a pasta inteira para forçar o SSD a limpar os índices antigos
+                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} rm -rf ${env.INTERNAL_PLUGIN_PATH}"
+                    // Recriamos a pasta vazia
+                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} mkdir -p ${env.INTERNAL_PLUGIN_PATH}"
 
                     echo "🚀 Injetando v1.0.0.${env.BUILD_NUMBER}..."
                     sh "docker cp ./publish/. ${env.JELLYFIN_CONTAINER}:${env.INTERNAL_PLUGIN_PATH}/"
             
-                    echo "🔑 Ajustando permissões..."
+                    echo "🔑 Ajustando permissões para sysdba..."
                     sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} chown -R 1000:1000 ${env.INTERNAL_PLUGIN_PATH}"
 
-                    echo "🔄 Forçando o Jellyfin a recarregar..."
-                    // Em vez de apenas 'restart', vamos dar um 'stop' e 'start' para garantir o ciclo completo
-                    sh "docker stop ${env.JELLYFIN_CONTAINER}"
+                    echo "🏁 Iniciando Jellyfin..."
                     sh "docker start ${env.JELLYFIN_CONTAINER}"
                 }
             }
