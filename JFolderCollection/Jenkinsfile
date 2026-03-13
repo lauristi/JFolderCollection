@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_NAME = 'JFolderCollection'
+        // Ajuste o nome do container conforme aparece no seu Portainer
         JELLYFIN_CONTAINER = 'jellyfin'
+        PROJECT_NAME = 'JFolderCollection'
         INTERNAL_PLUGIN_PATH = "/config/plugins/${PROJECT_NAME}"
-        DOTNET_SDK_IMAGE = 'mcr.microsoft.com/dotnet/sdk:9.0'
     }
 
     stages {
@@ -15,33 +15,42 @@ pipeline {
             }
         }
 
-        stage('02- Build (via Docker)') {
-            agent {
-                docker {
-                    image 'mcr.microsoft.com/dotnet/sdk:9.0'
-                    // Isso garante que o container use o mesmo diretório do checkout
-                    reuseNode true 
-                }
-            }
+        stage('02- Build Plugin') {
             steps {
-                // Aqui não usamos 'docker run', o Jenkins já nos colocou dentro do container
-                sh "dotnet publish JFolderCollection.sln -c Release -o ./publish"
+                script {
+                    echo "🛠️ Compilando plugin via Dockerfile (estilo Financial Analyzer)..."
+                    // Build da imagem que gera a DLL
+                    sh "docker build -t jfolder-builder:latest ."
+                    
+                    echo "📦 Extraindo artefatos..."
+                    // Cria um container temporário e copia a DLL para o workspace do Jenkins
+                    sh "docker create --name temp-jfolder jfolder-builder:latest"
+                    sh "mkdir -p ./publish"
+                    sh "docker cp temp-jfolder:/app/. ./publish"
+                    sh "docker rm temp-jfolder"
+                }
             }
         }
 
-        stage('03- Deploy') {
+        stage('03- Deploy no Jellyfin') {
             steps {
                 script {
-                    echo "📦 Injetando DLL no Jellyfin..."
+                    echo "🚀 Injetando DLL no container ${env.JELLYFIN_CONTAINER}..."
+                    // Cria a pasta do plugin dentro do Jellyfin (como root)
                     sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} mkdir -p ${env.INTERNAL_PLUGIN_PATH}"
+                    
+                    // Copia os arquivos compilados para dentro do Jellyfin
                     sh "docker cp ./publish/. ${env.JELLYFIN_CONTAINER}:${env.INTERNAL_PLUGIN_PATH}/"
+                    
+                    // Ajusta permissões para o usuário padrão do Jellyfin (UID 1000)
                     sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} chown -R 1000:1000 ${env.INTERNAL_PLUGIN_PATH}"
                 }
             }
         }
 
-        stage('04- Restart') {
+        stage('04- Restart Jellyfin') {
             steps {
+                echo "🔄 Reiniciando Jellyfin para carregar o novo plugin..."
                 sh "docker restart ${env.JELLYFIN_CONTAINER}"
             }
         }
@@ -49,7 +58,16 @@ pipeline {
 
     post {
         always {
+            // Limpeza de segurança
+            sh "docker rmi jfolder-builder:latest || true"
+            sh "rm -rf publish"
             cleanWs()
+        }
+        success {
+            echo "✅ Plugin JFolderCollection implantado com sucesso, Hal!"
+        }
+        failure {
+            echo "❌ Falha no processo. Verifique os logs acima."
         }
     }
 }
