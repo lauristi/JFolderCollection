@@ -41,26 +41,26 @@ pipeline {
             }
         }
 
-        stage('03- Deploy & Restart') {
+         stage('03- Deploy & Restart') {
             steps {
                 script {
-                    echo "🛑 Parando Jellyfin para limpeza profunda..."
-                    sh "docker stop ${env.JELLYFIN_CONTAINER}"
+                    // 1. Garantir que o container esteja rodando para aceitar o comando 'exec'
+                    // Se ele já estiver rodando, não faz nada. Se estiver parado, ele liga.
+                    sh "docker start jellyfin || true"
 
-                    echo "🔥 OPERAÇÃO TERRA ARRASADA: Removendo e recriando a pasta do plugin agora..."
-                    // Removemos a pasta inteira para forçar o SSD a limpar os índices antigos
-                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} rm -rf ${env.INTERNAL_PLUGIN_PATH}"
-                    // Recriamos a pasta vazia
-                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} mkdir -p ${env.INTERNAL_PLUGIN_PATH}"
+                    echo "🔥 OPERAÇÃO TERRA ARRASADA: Limpando a pasta do plugin..."
+                    // Usamos o container LIGADO para limpar o conteúdo
+                    sh "docker exec -u 0 jellyfin rm -rf /config/plugins/JFolderCollection/*"
 
                     echo "🚀 Injetando v1.0.0.${env.BUILD_NUMBER}..."
-                    sh "docker cp ./publish/. ${env.JELLYFIN_CONTAINER}:${env.INTERNAL_PLUGIN_PATH}/"
+                    sh "docker cp ./publish/. jellyfin:/config/plugins/JFolderCollection/"
             
-                    echo "🔑 Ajustando permissões para sysdba..."
-                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} chown -R 1000:1000 ${env.INTERNAL_PLUGIN_PATH}"
+                    echo "🔑 Ajustando permissões..."
+                    sh "docker exec -u 0 jellyfin chown -R 1000:1000 /config/plugins/JFolderCollection"
 
-                    echo "🏁 Iniciando Jellyfin..."
-                    sh "docker start ${env.JELLYFIN_CONTAINER}"
+                    echo "🔄 Reiniciando Jellyfin para aplicar as mudanças..."
+                    // O restart para e liga o processo, garantindo que a nova DLL seja carregada
+                    sh "docker restart jellyfin"
                 }
             }
         }
