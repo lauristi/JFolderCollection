@@ -17,21 +17,18 @@
         }
 
         stage('02- Build (via Docker)') {
-            steps {
-                script {
-                    echo "🛠️ Compilando o plugin usando container temporário do .NET..."
-                    
-                    // Este comando roda um container do .NET, monta o código dentro dele, 
-                    // compila e salva o resultado na pasta ./publish do seu host.
-                    sh """
-                        docker run --rm \
-                        -v "\$(pwd):/src" \
-                        -w /src \
-                        ${env.DOTNET_SDK_IMAGE} \
-                        dotnet publish JFolderCollection.sln -c Release -o ./publish
-                    """
+                steps {
+                    script {
+                        echo "🛠️ Compilando a solução..."
+                        sh """
+                            docker run --rm \
+                            -v "\$(pwd):/src" \
+                            -w /src \
+                            ${env.DOTNET_SDK_IMAGE} \
+                            dotnet publish JFolderCollection.sln -c Release -o ./publish
+                        """
+                    }
                 }
-            }
         }
 
         stage('03- Deploy') {
