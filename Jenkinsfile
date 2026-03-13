@@ -43,15 +43,20 @@ pipeline {
         stage('03- Deploy & Restart') {
             steps {
                 script {
-                    echo "🧹 FAXINA: Removendo lixo antigo de ${env.INTERNAL_PLUGIN_PATH}..."
+                    echo "🧹 FAXINA TOTAL: Removendo e recriando a pasta do plugin..."
                     
-                    // O golpe de misericórdia nas DLLs de 2025:
-                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} sh -c 'rm -rf ${env.INTERNAL_PLUGIN_PATH}/*'"
+                    // Em vez de apagar o conteúdo (*), removemos a pasta INTEIRA e a recriamos.
+                    // Isso força o sistema de arquivos do SSD a limpar os inodes antigos.
+                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} rm -rf ${env.INTERNAL_PLUGIN_PATH}"
+                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} mkdir -p ${env.INTERNAL_PLUGIN_PATH}"
                     
                     echo "🚀 Injetando v1.0.0.${env.BUILD_NUMBER} no Jellyfin..."
-                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} mkdir -p ${env.INTERNAL_PLUGIN_PATH}"
                     sh "docker cp ./publish/. ${env.JELLYFIN_CONTAINER}:${env.INTERNAL_PLUGIN_PATH}/"
+                    
+                    // Ajuste de permissão essencial para o Jellyfin conseguir ler
                     sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} chown -R 1000:1000 ${env.INTERNAL_PLUGIN_PATH}"
+                    
+                    echo "🔄 Reiniciando o container..."
                     sh "docker restart ${env.JELLYFIN_CONTAINER}"
                 }
             }
