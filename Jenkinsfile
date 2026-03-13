@@ -40,23 +40,19 @@ pipeline {
                 }
             }
         }
+
         stage('03- Deploy & Restart') {
             steps {
                 script {
-                    echo "🧹 FAXINA TOTAL: Removendo e recriando a pasta do plugin..."
-                    
-                    // Em vez de apagar o conteúdo (*), removemos a pasta INTEIRA e a recriamos.
-                    // Isso força o sistema de arquivos do SSD a limpar os inodes antigos.
-                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} rm -rf ${env.INTERNAL_PLUGIN_PATH}"
-                    sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} mkdir -p ${env.INTERNAL_PLUGIN_PATH}"
-                    
-                    echo "🚀 Injetando v1.0.0.${env.BUILD_NUMBER} no Jellyfin..."
+                    echo "🚀 Injetando arquivos na pasta limpa..."
+            
+                    // Já que você limpou manualmente, o Jenkins agora só precisa copiar
                     sh "docker cp ./publish/. ${env.JELLYFIN_CONTAINER}:${env.INTERNAL_PLUGIN_PATH}/"
-                    
-                    // Ajuste de permissão essencial para o Jellyfin conseguir ler
+            
+                    // Ajuste de permissão para o usuário 1000 (o sysdba que vimos no FileZilla)
                     sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} chown -R 1000:1000 ${env.INTERNAL_PLUGIN_PATH}"
-                    
-                    echo "🔄 Reiniciando o container..."
+            
+                    echo "🔄 Reiniciando Jellyfin para reconhecer o novo Plugin..."
                     sh "docker restart ${env.JELLYFIN_CONTAINER}"
                 }
             }
