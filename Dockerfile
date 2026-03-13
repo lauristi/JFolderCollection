@@ -1,27 +1,31 @@
-# Estágio de Build: Usa o SDK 9.0 para compilar
+# Estágio de Build
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Recebe a versão do Jenkins (padrão 1.0.0.0 se não enviada)
 ARG VERSION=1.0.0.0
 
-# Copia os arquivos para o container
+# 1. AJUSTE: Copia apenas o arquivo de projeto primeiro para otimizar o cache
+COPY JFolderCollection/JFolderCollection.csproj JFolderCollection/
+RUN dotnet restore JFolderCollection/JFolderCollection.csproj
+
+# 2. Copia o restante (certifique-se de ter o .dockerignore que mencionei antes)
 COPY . .
 
-# Ajuste: Adicionado o parâmetro de versão e o --no-self-contained no final
-# Isso garante que apenas a DLL do plugin e o manifesto sejam publicados
+# 3. AJUSTE NO PUBLISH: Adicionamos flags para impedir a criação de lixo XML e PDB
 RUN dotnet publish JFolderCollection/JFolderCollection.csproj \
     -c Release \
     -o /app/publish \
     /p:Version=${VERSION} \
     --no-self-contained \
-    /p:CopyLocalLockFileAssemblies=false
+    /p:CopyLocalLockFileAssemblies=false \
+    /p:DebugType=none \
+    /p:DebugSymbols=false \
+    /p:GenerateDocumentationFile=false
 
-# Copia o manifest.json para a pasta de publicação antes da extração final
-# Usamos o caminho relativo conforme sua nova estrutura na raiz
+# Copia o manifest.json
 COPY manifest.json /app/publish/
 
-# Estágio de extração: Gera uma imagem leve apenas com os binários
+# Estágio de extração
 FROM alpine:latest
 WORKDIR /app
 COPY --from=build /app/publish .
