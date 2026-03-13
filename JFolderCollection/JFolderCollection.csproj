@@ -17,12 +17,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Configuration\configPagel.html" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Jellyfin.Controller" Version="10.11.0" />
     <PackageReference Include="Jellyfin.Model" Version="10.11.0" />
   </ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="Configuration\configPage.Original" />
+		<EmbeddedResource Include="Configuration\configPagel.html" />
 	</ItemGroup>
 
 	<ItemGroup>

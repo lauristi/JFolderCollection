@@ -20,6 +20,19 @@ pipeline {
                 ])
             }
         }
+        stage('01.1 - Versioning') {
+            steps {
+                script {
+                    // Define a versão base + o número do build do Jenkins
+                    def fullVersion = "1.0.0.${env.BUILD_NUMBER}"
+                    echo "📌 Definindo versão: ${fullVersion}"
+
+                    // Substitui o placeholder no Manifesto e no HTML
+                    sh "sed -i 's/BUILD_VERSION/${fullVersion}/g' manifest.json"
+                    sh "sed -i 's/BUILD_VERSION/${fullVersion}/g' JFolderCollection/Configuration/configPage.html"
+                }
+            }   
+        }
         stage('02- Build Plugin') {
             steps {
                 script {

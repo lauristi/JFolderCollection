@@ -73,6 +73,13 @@
             };
         }
 
+        public Stream GetThumbImage()
+        {
+            var type = GetType();
+            // Ajuste o nome "thumb.png" para o nome real da sua imagem embutida
+            return type.Assembly.GetManifestResourceStream($"{type.Namespace}.plugin-thumbnail.png");
+        }
+
         #endregion
     }
 }

@@ -1,13 +1,13 @@
 {
-  "Author": "Andrew Adbujamil",
-  "CanUninstall": true,
-  "ConfigurationType": "JFolderCollection.Configuration.PluginConfiguration",
-  "Dependencies": [],
-  "Description": "This Plugin can read subfolders in a directory and transform their contents into collections.",
-  "EntryAssembly": "JFolderCollection.dll",
-  "Id": "c7b8d1b3-41d9-4a19-b04e-f43534455342",
-  "MinimumApiVersion": "10.9.0",
-  "Name": "JFolderCollection",
-  "Version": "1.0.0.17",
-  "Website": "https://seusite.com"
+  "name": "JFolderCollection",
+  "id": "c7b8d1b3-41d9-4a19-b04e-f43534455342",
+  "guid": "c7b8d1b3-41d9-4a19-b04e-f43534455342",
+  "version": "BUILD_VERSION",
+  "description": "Este plugin lê subpastas e as transforma em coleções no Jellyfin.",
+  "owner": "Andrew Adbujamil",
+  "author": "Andrew Adbujamil",
+  "canUninstall": true,
+  "entryAssembly": "JFolderCollection.dll",
+  "minimumApiVersion": "10.9.0",
+  "website": "https://github.com/lauristi/JFolderCollection"
 }
