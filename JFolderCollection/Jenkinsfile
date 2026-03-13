@@ -18,12 +18,13 @@ pipeline {
         stage('02- Build (via Docker)') {
             agent {
                 docker {
-                    image "${env.DOTNET_SDK_IMAGE}"
-                    reuseNode true
+                    image 'mcr.microsoft.com/dotnet/sdk:9.0'
+                    // Isso garante que o container use o mesmo diretório do checkout
+                    reuseNode true 
                 }
             }
             steps {
-                echo "🛠️ Compilando a solução de forma nativa no Docker..."
+                // Aqui não usamos 'docker run', o Jenkins já nos colocou dentro do container
                 sh "dotnet publish JFolderCollection.sln -c Release -o ./publish"
             }
         }
