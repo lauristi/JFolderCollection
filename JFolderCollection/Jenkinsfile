@@ -1,39 +1,30 @@
 pipeline {
     agent any
-
-    // Força o Jenkins a limpar o workspace antes de começar cada build
     options {
+        // Isso ajuda a evitar o cache de versões antigas do script
         skipDefaultCheckout(false)
-        checkoutToSubdirectory('')
     }
-
     environment {
         JELLYFIN_CONTAINER = 'jellyfin'
         PROJECT_NAME = 'JFolderCollection'
         INTERNAL_PLUGIN_PATH = "/config/plugins/${PROJECT_NAME}"
     }
-
     stages {
         stage('01- Checkout') {
             steps {
-                // Força um checkout limpo (Wipe out local copy)
+                // Voltamos ao comando padrão, mas com o WipeWorkspace para limpar o cache
                 checkout([$class: 'GitSCM', 
                     branches: scm.branches, 
-                    doGenerateSubmoduleConfigurations: false, 
                     extensions: [[$class: 'WipeWorkspace']], 
                     userRemoteConfigs: scm.userRemoteConfigs
                 ])
             }
         }
-
         stage('02- Build Plugin') {
             steps {
                 script {
-                    echo "🛠️ Compilando via Dockerfile (sem cache do Docker)..."
-                    // O --no-cache garante que o Docker não use camadas antigas
+                    echo "🛠️ Compilando via Dockerfile..."
                     sh "docker build --no-cache -t jfolder-builder:latest ."
-                    
-                    echo "📦 Extraindo artefatos..."
                     sh "docker create --name temp-jfolder jfolder-builder:latest"
                     sh "mkdir -p ./publish"
                     sh "docker cp temp-jfolder:/app/. ./publish"
@@ -41,7 +32,6 @@ pipeline {
                 }
             }
         }
-
         stage('03- Deploy & Restart') {
             steps {
                 script {
@@ -54,7 +44,6 @@ pipeline {
             }
         }
     }
-
     post {
         always {
             sh "rm -rf publish || true"
