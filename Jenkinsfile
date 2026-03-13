@@ -47,7 +47,7 @@ pipeline {
                     echo "🛑 Parando Jellyfin para limpeza profunda..."
                     sh "docker stop ${env.JELLYFIN_CONTAINER}"
 
-                    echo "🔥 OPERAÇÃO TERRA ARRASADA: Removendo e recriando a pasta do plugin..."
+                    echo "🔥 OPERAÇÃO TERRA ARRASADA: Removendo e recriando a pasta do plugin agora..."
                     // Removemos a pasta inteira para forçar o SSD a limpar os índices antigos
                     sh "docker exec -u 0 ${env.JELLYFIN_CONTAINER} rm -rf ${env.INTERNAL_PLUGIN_PATH}"
                     // Recriamos a pasta vazia
