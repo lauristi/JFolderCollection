@@ -5,6 +5,7 @@
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
 
@@ -34,8 +35,6 @@
 
             try
             {
-                // Pass the required key argument for GetConfiguration<T>
-                //_config = Plugin.Instance?.Configuration ?? new PluginConfiguration();
                 // Carrega a configuração salva do plugin, ou cria uma nova padrão se não existir
                 _config = configurationManager.GetConfiguration<PluginConfiguration>(
                                                                                       nameof(PluginConfiguration)
@@ -108,27 +107,123 @@
         }
 
         /// <summary>
-        /// Teste de log.
+        /// Retorna uma lista de filmes duplicados baseado no nome do arquivo.
         /// </summary>
-        /// <returns>ok</returns>
-        [HttpPost("LogTest")]
-        public IActionResult PostLogTest()
+        /// <param name="path">Caminho opcional, usa BaseFolderPath se nulo.</param>
+        [HttpGet("DuplicateMovies")]
+        public IActionResult GetDuplicateMovies([FromQuery] string? path = null)
         {
-            _logger.LogInformation("🔄 LogTest chamado via POST");
+            _logger.LogInformation("🎬 GetDuplicateMovies chamado - path: '{Path}'", path ?? "null");
 
             try
             {
-                _logger.LogInformation("📝 Escrevendo no arquivo de log...");
-                System.IO.File.AppendAllText(_logFile, $"{DateTime.Now}: Apenas um teste de LOG\n");
+                string basePath = _config.BaseFolderPath ?? "/mnt/xs1000/Filmes Colecoes";
+                string targetPath = string.IsNullOrWhiteSpace(path) ? basePath : path;
 
-                _logger.LogInformation("✅ Log escrito com sucesso");
-                return Ok();
+                _logger.LogInformation("📂 TargetPath final: '{TargetPath}'", targetPath);
+
+                // Sanitiza caminho
+                targetPath = Path.GetFullPath(targetPath);
+                _logger.LogInformation("📂 Path sanitizado: '{TargetPath}'", targetPath);
+
+                // Escreve no arquivo de log
+                System.IO.File.AppendAllText(_logFile, $"{DateTime.Now}: GetDuplicateMovies - path: '{path}', final: '{targetPath}'\n");
+
+                if (!Directory.Exists(targetPath))
+                {
+                    _logger.LogWarning("❌ Diretório não encontrado: {TargetPath}", targetPath);
+                    System.IO.File.AppendAllText(_logFile, $"{DateTime.Now}: Diretório não encontrado: {targetPath}\n");
+                    return NotFound(new { Message = $"Diretório não encontrado: {targetPath}" });
+                }
+
+                _logger.LogInformation("✅ Diretório existe: {TargetPath}", targetPath);
+
+                // Busca recursivamente por arquivos de vídeo
+                var videoExtensions = new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpg", ".mpeg" };
+                var allMovies = new List<MovieFile>();
+
+                // Busca em todas as subpastas
+                var allDirectories = Directory.GetDirectories(targetPath, "*", SearchOption.AllDirectories);
+                _logger.LogInformation("📁 Total de diretórios encontrados: {Count}", allDirectories.Length);
+
+                foreach (var directory in allDirectories)
+                {
+                    try
+                    {
+                        var files = Directory.GetFiles(directory)
+                            .Where(file => videoExtensions.Contains(Path.GetExtension(file).ToLowerInvariant()))
+                            .Select(file => new MovieFile
+                            {
+                                FileName = Path.GetFileNameWithoutExtension(file),
+                                FullPath = file,
+                                Directory = directory
+                            });
+
+                        allMovies.AddRange(files);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "⚠️ Erro ao acessar diretório: {Directory}", directory);
+                    }
+                }
+
+                _logger.LogInformation("🎬 Total de filmes encontrados: {Count}", allMovies.Count);
+
+                // Encontra duplicados usando LINQ
+                var duplicateGroups = allMovies
+                    .GroupBy(movie => movie.FileName, StringComparer.OrdinalIgnoreCase)
+                    .Where(group => group.Count() > 1)
+                    .ToList();
+
+                _logger.LogInformation("🔍 Grupos de duplicados encontrados: {Count}", duplicateGroups.Count);
+
+                var result = duplicateGroups.Select(group => new
+                {
+                    MovieName = group.Key,
+                    Count = group.Count(),
+                    Locations = group.Select(movie => new
+                    {
+                        movie.FullPath,
+                        movie.Directory
+                    }).ToList()
+                }).ToList();
+
+                // Log dos resultados
+                foreach (var duplicate in result)
+                {
+                    _logger.LogInformation("📝 Duplicado: {MovieName} - {Count} cópias", duplicate.MovieName, duplicate.Count);
+                    foreach (var location in duplicate.Locations)
+                    {
+                        _logger.LogInformation("   📍 {Path}", location.FullPath);
+                    }
+                }
+
+                System.IO.File.AppendAllText(_logFile,
+                    $"{DateTime.Now}: DuplicateMovies - {result.Count} filmes duplicados encontrados\n");
+
+                return Ok(new
+                {
+                    TotalMoviesScanned = allMovies.Count,
+                    DuplicateMoviesCount = result.Count,
+                    Duplicates = result
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 ERRO em LogTest");
-                return StatusCode(500, new { Message = "Erro interno ao gerar log." });
+                _logger.LogError(ex, "💥 ERRO em GetDuplicateMovies");
+                System.IO.File.AppendAllText(_logFile, $"{DateTime.Now}: ERRO em GetDuplicateMovies - {ex.Message}\n{ex.StackTrace}\n");
+                return StatusCode(500, new { Message = "Erro interno ao buscar filmes duplicados." });
             }
+        }
+
+        /// <summary>
+        /// Classe auxiliar para representar um arquivo de filme.
+        /// </summary>
+        private class MovieFile
+        {
+            public string FileName { get; set; } = string.Empty;
+            public string FullPath { get; set; } = string.Empty;
+            public string Directory { get; set; } = string.Empty;
         }
     }
 }

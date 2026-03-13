@@ -17,13 +17,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Jenkinsfile" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Jellyfin.Controller" Version="10.11.0" />
     <PackageReference Include="Jellyfin.Model" Version="10.11.0" />
   </ItemGroup>
 
 	<ItemGroup>
-		<None Remove="Configuration\configPage.html" />
-		<EmbeddedResource Include="Configuration\configPage.html" />
+		<EmbeddedResource Include="Configuration\configPage.Original" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -33,6 +36,15 @@
 		<None Update="manifest.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+
+	<!-- 🖼️ Incluir ambas as imagens -->
+	<ItemGroup>
+		<EmbeddedResource Include="Images\plugin-thumbnail.png" />
+		<EmbeddedResource Include="Images\plugin-icon.png" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="MediaBrowser\Model\" />
 	</ItemGroup>
 
 </Project>

@@ -1,67 +1,80 @@
-﻿// <copyright file="PluginConfiguration.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
+﻿namespace JFolderCollection.Configuration
+{
+    using MediaBrowser.Model.Plugins;
 
-
-namespace JFolderCollection.Configuration;
-using MediaBrowser.Model.Plugins;
+    #region Enumerações
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="PluginConfiguration"/> class with default settings.
+    /// Define as opções de configuração disponíveis para o plugin.
+    /// Útil para criar seletores (dropdowns) na interface administrativa.
     /// </summary>
     public enum SomeOptions
     {
         /// <summary>
-        /// Option one.
+        /// Representa a primeira opção de configuração.
         /// </summary>
         OneOption,
 
         /// <summary>
-        /// Second option.
+        /// Representa a segunda opção de configuração.
         /// </summary>
         AnotherOption,
     }
 
+    #endregion
+
     /// <summary>
-    /// Initializes a new instance of the <see cref="PluginConfiguration"/> class with default settings.
+    /// Classe que define a estrutura de dados das configurações do plugin.
+    /// O Jellyfin serializa esta classe automaticamente em um arquivo XML.
     /// </summary>
     public class PluginConfiguration : BasePluginConfiguration
     {
+        #region Propriedades de Configuração
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="PluginConfiguration"/> class with default settings.
+        /// Obtém ou define um valor que indica se uma funcionalidade específica está ativa.
         /// </summary>
         public bool TrueFalseSetting { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PluginConfiguration"/> class with default settings.
+        /// Obtém ou define um valor numérico inteiro de configuração.
         /// </summary>
         public int AnInteger { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PluginConfiguration"/> class with default settings.
+        /// Obtém ou define uma string genérica de configuração.
         /// </summary>
-        public string AString { get; set; }
+        public string AString { get; set; } = string.Empty;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PluginConfiguration"/> class with default settings.
+        /// Obtém ou define a opção selecionada a partir da enumeração <see cref="SomeOptions"/>.
         /// </summary>
         public SomeOptions Options { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PluginConfiguration"/> class with default settings.
+        /// Obtém ou define o caminho base do diretório de mídia que o plugin deve processar.
         /// </summary>
-        public string BaseFolderPath { get; set; }
+        public string BaseFolderPath { get; set; } = string.Empty;
+
+        #endregion
+
+        #region Inicialização
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PluginConfiguration"/> class with default settings.
+        /// Inicializa uma nova instância da classe <see cref="PluginConfiguration"/> com valores padrão.
         /// </summary>
         public PluginConfiguration()
         {
-            // set default options here
-            this.Options = SomeOptions.AnotherOption;
-            this.TrueFalseSetting = true;
-            this.AnInteger = 2;
-            this.AString = "string";
-            this.BaseFolderPath = "/mnt/xs1000/Filmes/Filmes Colecoes";
+            // Definição dos valores padrão (Default Settings)
+            Options = SomeOptions.AnotherOption;
+            TrueFalseSetting = true;
+            AnInteger = 2;
+            AString = "string";
+
+            // Caminho padrão conforme estrutura do servidor
+            BaseFolderPath = "/mnt/xs1000/Filmes/Filmes Colecoes";
         }
+
+        #endregion
     }
+}
