@@ -3,8 +3,9 @@
     "guid": "c7b8d1b3-41d9-4a19-b04e-f43534455342",
     "name": "JFolderCollection",
     "description": "Este plugin lê subpastas e as transforma em coleções no Jellyfin.",
-    "owner": "Andrew Adbujamil",
+    "owner": "Lauris TI",
     "category": "General",
+    "imageUrl": "https://raw.githubusercontent.com/lauristi/JFolderCollection/master/JFolderCollection/Images/plugin-thumbnail.png",
     "versions": [
       {
         "version": "BUILD_VERSION",
