@@ -1,13 +1,19 @@
-{
-  "name": "JFolderCollection",
-  "id": "c7b8d1b3-41d9-4a19-b04e-f43534455342",
-  "guid": "c7b8d1b3-41d9-4a19-b04e-f43534455342",
-  "version": "BUILD_VERSION",
-  "description": "Este plugin lê subpastas e as transforma em coleções no Jellyfin.",
-  "owner": "Andrew Adbujamil",
-  "author": "Andrew Adbujamil",
-  "canUninstall": true,
-  "entryAssembly": "JFolderCollection.dll",
-  "minimumApiVersion": "10.9.0",
-  "website": "https://github.com/lauristi/JFolderCollection"
-}
+[
+  {
+    "guid": "c7b8d1b3-41d9-4a19-b04e-f43534455342",
+    "name": "JFolderCollection",
+    "description": "Este plugin lê subpastas e as transforma em coleções no Jellyfin.",
+    "owner": "Andrew Adbujamil",
+    "category": "General",
+    "versions": [
+      {
+        "version": "BUILD_VERSION",
+        "changelog": "Build automatizado via Jenkins.",
+        "targetAbi": "10.9.0.0",
+        "sourceUrl": "",
+        "checksum": "",
+        "timestamp": "2025-01-01T00:00:00Z"
+      }
+    ]
+  }
+]

@@ -3,12 +3,115 @@
 <head>
     <meta charset="utf-8">
     <title>JFolderCollection Config</title>
+    <style>
+        /* ── Seletor de Diretório Inline ─────────────────────────────────
+           Substitui o directorybrowser nativo do Jellyfin que foi migrado
+           para React no 10.11 e não é mais confiável via require() AMD.
+           Usamos um modal simples que chama nosso próprio endpoint de
+           listagem de pastas — o mesmo usado pelo botão "Listar Pastas".
+        ──────────────────────────────────────────────────────────────── */
+        #dirBrowserOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.75);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+            #dirBrowserOverlay.active {
+                display: flex;
+            }
+
+        #dirBrowserBox {
+            background: #1c1c1c;
+            border: 1px solid #444;
+            border-radius: 6px;
+            width: 560px;
+            max-width: 95vw;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 10px;
+        }
+
+        #dirBrowserTitle {
+            font-size: 1em;
+            font-weight: bold;
+            color: #fff;
+            margin: 0;
+        }
+
+        #dirBrowserCurrentPath {
+            font-size: 0.8em;
+            color: #aaa;
+            word-break: break-all;
+            min-height: 1.2em;
+        }
+
+        #dirBrowserList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex: 1;
+            border: 1px solid #333;
+            border-radius: 4px;
+            min-height: 200px;
+        }
+
+            #dirBrowserList li {
+                padding: 8px 12px;
+                cursor: pointer;
+                color: #ccc;
+                border-bottom: 1px solid #2a2a2a;
+            }
+
+                #dirBrowserList li:hover {
+                    background: #2e2e2e;
+                    color: #fff;
+                }
+
+                #dirBrowserList li.up {
+                    color: #90caf9;
+                }
+
+        #dirBrowserActions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+    </style>
 </head>
 <body>
+
+    <!-- ── Modal: Seletor de Diretório ─────────────────────────────── -->
+    <div id="dirBrowserOverlay">
+        <div id="dirBrowserBox">
+            <p id="dirBrowserTitle">Selecionar Diretório</p>
+            <div id="dirBrowserCurrentPath">/</div>
+            <ul id="dirBrowserList"></ul>
+            <div id="dirBrowserActions">
+                <button is="emby-button" type="button" class="raised emby-button" id="dirBrowserCancel">
+                    <span>Cancelar</span>
+                </button>
+                <button is="emby-button" type="button" class="raised button-submit emby-button" id="dirBrowserSelect">
+                    <span>Selecionar esta pasta</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Página Principal ─────────────────────────────────────────── -->
     <div id="JFolderConfigPage"
          data-role="page"
          class="page type-interior pluginConfigurationPage"
-         data-require="emby-input,emby-button,emby-select,emby-checkbox,directorybrowser">
+         data-require="emby-input,emby-button,emby-select,emby-checkbox">
 
         <div data-role="content">
             <div class="content-primary">
@@ -17,61 +120,42 @@
 
                 <form id="JFolderConfigForm">
 
-                    <!-- ═══════════════════════════════════════════════
-                         SEÇÃO 1: Diretórios
-                    ═══════════════════════════════════════════════ -->
                     <div class="verticalSection">
                         <h2 class="sectionTitle">Diretórios do Servidor</h2>
 
                         <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="BaseFolderPath">
-                                Caminho da Coleção de Filmes
-                            </label>
+                            <label class="inputLabel inputLabelUnfocused" for="BaseFolderPath">Caminho da Coleção de Filmes</label>
                             <div style="display:flex; gap:10px; align-items:center;">
                                 <input id="BaseFolderPath" name="BaseFolderPath" type="text" is="emby-input" style="flex:1;" />
                                 <button type="button" is="emby-button" class="raised button-submit" id="browseBaseFolder">
                                     <span>Browse</span>
                                 </button>
                             </div>
-                            <div class="fieldDescription">
-                                Diretório raiz onde as pastas de coleções estão organizadas.
-                                Cada subpasta representa uma coleção.
-                            </div>
+                            <div class="fieldDescription">Diretório raiz onde as pastas de coleções estão organizadas.</div>
                         </div>
 
                         <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="PosterFolderPath">
-                                Caminho dos Posters
-                            </label>
+                            <label class="inputLabel inputLabelUnfocused" for="PosterFolderPath">Caminho dos Posters</label>
                             <div style="display:flex; gap:10px; align-items:center;">
                                 <input id="PosterFolderPath" name="PosterFolderPath" type="text" is="emby-input" style="flex:1;" />
                                 <button type="button" is="emby-button" class="raised button-submit" id="browsePosterFolder">
                                     <span>Browse</span>
                                 </button>
                             </div>
-                            <div class="fieldDescription">
-                                Pasta com arquivos .png nomeados igual à pasta da coleção correspondente.
-                            </div>
+                            <div class="fieldDescription">Pasta com arquivos .png nomeados igual à pasta da coleção.</div>
                         </div>
                     </div>
 
-                    <!-- ═══════════════════════════════════════════════
-                         SEÇÃO 2: Regras de Processamento
-                    ═══════════════════════════════════════════════ -->
                     <div class="verticalSection">
                         <h2 class="sectionTitle">Regras de Processamento</h2>
 
                         <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="PrefixAtual">
-                                Buscar por (Prefixo)
-                            </label>
+                            <label class="inputLabel inputLabelUnfocused" for="PrefixAtual">Buscar por (Prefixo)</label>
                             <input id="PrefixAtual" name="PrefixAtual" type="text" is="emby-input" />
                         </div>
 
                         <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="PrefixNovo">
-                                Substituir por
-                            </label>
+                            <label class="inputLabel inputLabelUnfocused" for="PrefixNovo">Substituir por</label>
                             <input id="PrefixNovo" name="PrefixNovo" type="text" is="emby-input" />
                         </div>
 
@@ -90,25 +174,15 @@
                         </div>
                     </div>
 
-                    <!-- ═══════════════════════════════════════════════
-                         SEÇÃO 3: Executar
-                    ═══════════════════════════════════════════════ -->
                     <div class="verticalSection">
-                        <button id="createCollectionsBtn"
-                                is="emby-button"
-                                type="button"
-                                class="raised block emby-button"
+                        <button id="createCollectionsBtn" is="emby-button" type="button" class="raised block emby-button"
                                 style="background-color:#2e7d32; color:white; padding:0.8em; font-weight:bold;">
                             <span>EXECUTAR CRIAÇÃO DE COLEÇÕES</span>
                         </button>
                     </div>
 
-                    <!-- ═══════════════════════════════════════════════
-                         SEÇÃO 4: Ferramentas
-                    ═══════════════════════════════════════════════ -->
                     <div class="verticalSection">
                         <h2 class="sectionTitle">Ferramentas</h2>
-
                         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
                             <button id="loadFoldersBtn" is="emby-button" type="button" class="raised emby-button">
                                 <span>Listar Pastas</span>
@@ -119,25 +193,19 @@
                             </button>
                         </div>
 
-                        <!-- Resultado: lista de pastas -->
                         <div id="folderListContainer" style="display:none; margin-bottom:20px;">
                             <h3 class="sectionTitle" style="font-size:0.9em;">Pastas encontradas</h3>
                             <div class="paperList" style="max-height:300px; overflow-y:auto;">
-                                <ul id="folderList" class="itemsContainer vertical-list"
-                                    style="list-style:none; padding:0; margin:0;"></ul>
+                                <ul id="folderList" class="itemsContainer vertical-list" style="list-style:none; padding:0; margin:0;"></ul>
                             </div>
                         </div>
 
-                        <!-- Resultado: duplicados -->
                         <div id="duplicatesListContainer" style="display:none; margin-bottom:20px;">
                             <h3 class="sectionTitle" style="font-size:0.9em;">Filmes duplicados</h3>
                             <div id="duplicatesList"></div>
                         </div>
                     </div>
 
-                    <!-- ═══════════════════════════════════════════════
-                         SALVAR CONFIGURAÇÕES
-                    ═══════════════════════════════════════════════ -->
                     <div style="margin-top:2em; border-top:1px solid #333; padding-top:1em;">
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Salvar Configurações</span>
@@ -149,19 +217,18 @@
         </div>
 
         <script type="text/javascript">
-            // CORREÇÃO CRÍTICA: Script unificado em um único bloco IIFE.
-            // O script duplicado causava duplo registro de listeners e sobrescrita de funções,
-            // resultando em comportamento imprevisível e botões que não respondiam.
             (function () {
                 'use strict';
 
                 const PLUGIN_ID = 'c7b8d1b3-41d9-4a19-b04e-f43534455342';
 
-                // ─────────────────────────────────────────────────────
-                // INICIALIZAÇÃO: Executado ao abrir a página de config
-                // ─────────────────────────────────────────────────────
+                // Estado do seletor de diretório
+                var _dirInputTarget = null;
+                var _dirCurrentPath = '/';
+
+                // ── Inicialização ───────────────────────────────────────────────
                 document.querySelector('#JFolderConfigPage').addEventListener('pageshow', function () {
-                    const page = this;
+                    var page = this;
                     Dashboard.showLoadingMsg();
 
                     ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (config) {
@@ -170,21 +237,16 @@
                         page.querySelector('#PrefixAtual').value = config.PrefixAtual || '';
                         page.querySelector('#PrefixNovo').value = config.PrefixNovo || '';
                         page.querySelector('#ApagarTudo').checked = config.ApagarTudo || false;
-                        // OnlyNew tem default true; só usa false se explicitamente salvo como false.
                         page.querySelector('#OnlyNew').checked = (config.OnlyNew !== false);
                         Dashboard.hideLoadingMsg();
                     });
 
-                    // CORREÇÃO: Passamos 'page' para openDirectoryBrowser para usar
-                    // page.querySelector em vez de document.getElementById.
-                    // Isso evita conflitos se o Jellyfin mantiver múltiplas páginas no DOM.
                     page.querySelector('#browseBaseFolder').addEventListener('click', function () {
-                        openDirectoryBrowser(page, 'BaseFolderPath');
+                        openDirBrowser(page.querySelector('#BaseFolderPath'));
                     });
                     page.querySelector('#browsePosterFolder').addEventListener('click', function () {
-                        openDirectoryBrowser(page, 'PosterFolderPath');
+                        openDirBrowser(page.querySelector('#PosterFolderPath'));
                     });
-
                     page.querySelector('#createCollectionsBtn').addEventListener('click', function () {
                         executeCreateCollections(page);
                     });
@@ -194,16 +256,13 @@
                     page.querySelector('#findDuplicatesBtn').addEventListener('click', function () {
                         loadDuplicateMovies(page);
                     });
-
                     page.querySelector('#JFolderConfigForm').addEventListener('submit', function (e) {
                         e.preventDefault();
                         saveSettings(page);
                     });
                 });
 
-                // ─────────────────────────────────────────────────────
-                // SALVAR CONFIGURAÇÕES
-                // ─────────────────────────────────────────────────────
+                // ── Salvar ──────────────────────────────────────────────────────
                 function saveSettings(page) {
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (config) {
@@ -213,26 +272,19 @@
                         config.PrefixNovo = page.querySelector('#PrefixNovo').value;
                         config.ApagarTudo = page.querySelector('#ApagarTudo').checked;
                         config.OnlyNew = page.querySelector('#OnlyNew').checked;
-
                         ApiClient.updatePluginConfiguration(PLUGIN_ID, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
                         });
                     });
                 }
 
-                // ─────────────────────────────────────────────────────
-                // EXECUTAR CRIAÇÃO DE COLEÇÕES
-                // ─────────────────────────────────────────────────────
+                // ── Criar Coleções ──────────────────────────────────────────────
                 function executeCreateCollections(page) {
                     var deleteAll = page.querySelector('#ApagarTudo').checked;
-
                     if (!confirm('Deseja iniciar a criação das coleções agora?')) return;
+                    if (deleteAll && !confirm('⚠️ ATENÇÃO: Você marcou APAGAR TODAS as coleções. Deseja continuar?')) return;
 
-                    if (deleteAll && !confirm('⚠️ ATENÇÃO: Você marcou APAGAR TODAS as coleções existentes. Deseja continuar?')) {
-                        return;
-                    }
-
-                    var requestBody = {
+                    var body = {
                         currentPrefix: page.querySelector('#PrefixAtual').value,
                         newPrefix: page.querySelector('#PrefixNovo').value,
                         baseFolderPath: page.querySelector('#BaseFolderPath').value,
@@ -243,108 +295,75 @@
 
                     Dashboard.showLoadingMsg();
 
-                    // CORREÇÃO: 'method' em vez de 'type'.
-                    // No Jellyfin 10.8+, o ApiClient.ajax/fetch usa 'method' (padrão fetch/XHR moderno).
-                    // 'type' era nomenclatura do jQuery.ajax e não é reconhecido aqui.
-                    ApiClient.ajax({
-                        url: ApiClient.getUrl('Plugin/Folder/CreateCollections'),
+                    // CORREÇÃO CRÍTICA: Usamos fetch nativo em vez de ApiClient.ajax().
+                    //
+                    // O erro "Request with GET/HEAD method cannot have body" vinha do
+                    // ApiClient.ajax do Jellyfin que, em certas versões, não define
+                    // corretamente o method antes de montar o body, fazendo o browser
+                    // interpretar a requisição como GET.
+                    //
+                    // Com fetch nativo + header de autorização explícito, o método
+                    // POST com body JSON funciona de forma direta e previsível.
+                    fetch(ApiClient.getUrl('Plugin/Folder/CreateCollections'), {
                         method: 'POST',
-                        data: JSON.stringify(requestBody),
-                        contentType: 'application/json'
-                    }).then(function () {
-                        Dashboard.hideLoadingMsg();
-                        Dashboard.alert('✅ Operação finalizada com sucesso!');
-                    }).catch(function (err) {
-                        Dashboard.hideLoadingMsg();
-                        Dashboard.alert('❌ Erro ao criar coleções: ' + (err.statusText || err));
-                    });
-                }
-
-                // ─────────────────────────────────────────────────────
-                // BROWSER DE DIRETÓRIO
-                // ─────────────────────────────────────────────────────
-                function openDirectoryBrowser(page, inputId) {
-                    var input = page.querySelector('#' + inputId);
-
-                    // CORREÇÃO: 'require' (global AMD do Jellyfin), não 'window.require'.
-                    // O Jellyfin injeta o require do RequireJS como global — window.require
-                    // não existe neste contexto e causa falha silenciosa.
-                    require(['directorybrowser'], function (DirectoryBrowser) {
-                        var picker = new DirectoryBrowser();
-                        picker.show({
-                            callback: function (path) {
-                                if (path) {
-                                    input.value = path;
-                                }
-                                picker.close();
-                            },
-                            path: input.value,
-                            validateWriteable: false
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"'
+                        },
+                        body: JSON.stringify(body)
+                    })
+                        .then(function (response) {
+                            if (!response.ok) {
+                                return response.json().then(function (err) {
+                                    throw new Error(err.Message || 'Erro HTTP ' + response.status);
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(function (result) {
+                            Dashboard.hideLoadingMsg();
+                            Dashboard.alert('✅ ' + (result.Message || 'Operação finalizada!'));
+                        })
+                        .catch(function (err) {
+                            Dashboard.hideLoadingMsg();
+                            Dashboard.alert('❌ Erro: ' + err.message);
                         });
-                    });
                 }
 
-                // ─────────────────────────────────────────────────────
-                // LISTAR PASTAS
-                // ─────────────────────────────────────────────────────
+                // ── Listar Pastas ───────────────────────────────────────────────
                 function loadFolders(page) {
                     var path = page.querySelector('#BaseFolderPath').value;
-
-                    if (!path) {
-                        Dashboard.alert('Informe o caminho da coleção antes de listar as pastas.');
-                        return;
-                    }
-
+                    if (!path) { Dashboard.alert('Informe o caminho antes de listar.'); return; }
                     Dashboard.showLoadingMsg();
-
                     ApiClient.getJSON(ApiClient.getUrl('Plugin/Folder/Subfolders', { path: path }))
                         .then(function (folders) {
                             var list = page.querySelector('#folderList');
-
-                            if (!folders || folders.length === 0) {
-                                list.innerHTML = '<li style="padding:8px; color:#aaa;">Nenhuma pasta encontrada.</li>';
-                            } else {
-                                list.innerHTML = folders.map(function (f) {
-                                    return '<li style="padding:4px 8px;">' + escapeHtml(f) + '</li>';
-                                }).join('');
-                            }
-
+                            list.innerHTML = (!folders || folders.length === 0)
+                                ? '<li style="padding:8px; color:#aaa;">Nenhuma pasta encontrada.</li>'
+                                : folders.map(function (f) { return '<li style="padding:4px 8px;">' + escapeHtml(f) + '</li>'; }).join('');
                             page.querySelector('#folderListContainer').style.display = 'block';
                             Dashboard.hideLoadingMsg();
                         })
                         .catch(function () {
                             Dashboard.hideLoadingMsg();
-                            Dashboard.alert('Erro ao listar pastas. Verifique o caminho informado.');
+                            Dashboard.alert('Erro ao listar pastas.');
                         });
                 }
 
-                // ─────────────────────────────────────────────────────
-                // BUSCAR DUPLICADOS
-                // ─────────────────────────────────────────────────────
+                // ── Buscar Duplicados ───────────────────────────────────────────
                 function loadDuplicateMovies(page) {
                     var path = page.querySelector('#BaseFolderPath').value;
-
-                    if (!path) {
-                        Dashboard.alert('Informe o caminho da coleção antes de buscar duplicados.');
-                        return;
-                    }
-
+                    if (!path) { Dashboard.alert('Informe o caminho antes de buscar duplicados.'); return; }
                     Dashboard.showLoadingMsg();
-
                     ApiClient.getJSON(ApiClient.getUrl('Plugin/Folder/DuplicateMovies', { path: path }))
                         .then(function (result) {
                             var list = page.querySelector('#duplicatesList');
-
-                            // Verificação defensiva: result pode ser null em caso de erro HTTP
-                            // que não disparou o .catch (comportamento do ApiClient em algumas versões).
                             if (!result || !result.Duplicates || result.Duplicates.length === 0) {
-                                list.innerHTML = '<p style="color:#aaa;">Nenhum duplicado encontrado. Total escaneado: '
+                                list.innerHTML = '<p style="color:#aaa;">Nenhum duplicado. Total: '
                                     + (result ? result.TotalMoviesScanned : 0) + ' arquivos.</p>';
                             } else {
-                                var html = '<p style="color:#aaa; margin-bottom:10px;">Total escaneado: '
-                                    + result.TotalMoviesScanned + ' arquivos. Grupos duplicados: '
-                                    + result.Duplicates.length + '</p>';
-
+                                var html = '<p style="color:#aaa; margin-bottom:10px;">Total: ' + result.TotalMoviesScanned
+                                    + ' arquivos | Grupos: ' + result.Duplicates.length + '</p>';
                                 html += result.Duplicates.map(function (d) {
                                     return '<div style="margin-bottom:10px; border-bottom:1px solid #444; padding-bottom:8px;">'
                                         + '<strong>' + escapeHtml(d.MovieName) + '</strong>'
@@ -352,23 +371,104 @@
                                         + '<small style="color:#aaa;">' + d.Locations.map(escapeHtml).join('<br/>') + '</small>'
                                         + '</div>';
                                 }).join('');
-
                                 list.innerHTML = html;
                             }
-
                             page.querySelector('#duplicatesListContainer').style.display = 'block';
                             Dashboard.hideLoadingMsg();
                         })
                         .catch(function () {
                             Dashboard.hideLoadingMsg();
-                            Dashboard.alert('Erro ao buscar duplicados. Verifique o caminho informado.');
+                            Dashboard.alert('Erro ao buscar duplicados.');
                         });
                 }
 
-                // ─────────────────────────────────────────────────────
-                // UTILITÁRIO: Sanitiza strings antes de inserir no innerHTML.
-                // Evita XSS caso nomes de pastas contenham caracteres especiais HTML.
-                // ─────────────────────────────────────────────────────
+                // ═══════════════════════════════════════════════════════════════
+                // SELETOR DE DIRETÓRIO CUSTOMIZADO
+                //
+                // Por que não usar o directorybrowser nativo?
+                // O Jellyfin 10.11 está migrando AMD/RequireJS → React.
+                // O módulo 'directorybrowser' existe no bundle mas o require()
+                // AMD falha em certas instalações com o novo layout habilitado.
+                //
+                // Solução: modal próprio que usa GET Plugin/Folder/Subfolders
+                // para navegar no filesystem do servidor. Sem dependências externas.
+                // ═══════════════════════════════════════════════════════════════
+
+                function openDirBrowser(inputEl) {
+                    _dirInputTarget = inputEl;
+                    _dirCurrentPath = inputEl.value || '/';
+                    loadDirPath(_dirCurrentPath);
+                    document.getElementById('dirBrowserOverlay').classList.add('active');
+                }
+
+                function loadDirPath(path) {
+                    var list = document.getElementById('dirBrowserList');
+                    document.getElementById('dirBrowserCurrentPath').textContent = path;
+                    list.innerHTML = '<li style="color:#aaa; padding:8px;">Carregando...</li>';
+
+                    fetch(ApiClient.getUrl('Plugin/Folder/Subfolders', { path: path }), {
+                        headers: { 'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"' }
+                    })
+                        .then(function (r) { return r.json(); })
+                        .then(function (subfolders) {
+                            list.innerHTML = '';
+
+                            // Botão "voltar um nível"
+                            var parent = parentPath(path);
+                            if (parent !== path) {
+                                var upLi = document.createElement('li');
+                                upLi.className = 'up';
+                                upLi.innerHTML = '📁 .. <span style="color:#666; font-size:0.8em;">(voltar)</span>';
+                                upLi.addEventListener('click', function () { _dirCurrentPath = parent; loadDirPath(parent); });
+                                list.appendChild(upLi);
+                            }
+
+                            if (!subfolders || subfolders.length === 0) {
+                                var empty = document.createElement('li');
+                                empty.style.color = '#666';
+                                empty.textContent = 'Nenhuma subpasta encontrada.';
+                                list.appendChild(empty);
+                                return;
+                            }
+
+                            subfolders.forEach(function (name) {
+                                var full = joinPath(path, name);
+                                var li = document.createElement('li');
+                                li.innerHTML = '📂 ' + escapeHtml(name);
+                                li.addEventListener('click', function () { _dirCurrentPath = full; loadDirPath(full); });
+                                list.appendChild(li);
+                            });
+                        })
+                        .catch(function () {
+                            list.innerHTML = '<li style="color:#e57373; padding:8px;">Erro ao acessar o diretório.</li>';
+                        });
+                }
+
+                document.getElementById('dirBrowserSelect').addEventListener('click', function () {
+                    if (_dirInputTarget) _dirInputTarget.value = _dirCurrentPath;
+                    closeDirBrowser();
+                });
+                document.getElementById('dirBrowserCancel').addEventListener('click', closeDirBrowser);
+                document.getElementById('dirBrowserOverlay').addEventListener('click', function (e) {
+                    if (e.target === this) closeDirBrowser();
+                });
+
+                function closeDirBrowser() {
+                    document.getElementById('dirBrowserOverlay').classList.remove('active');
+                    _dirInputTarget = null;
+                }
+
+                function parentPath(path) {
+                    var p = path.replace(/\/+$/, '');
+                    if (!p || p === '/') return '/';
+                    var idx = p.lastIndexOf('/');
+                    return idx <= 0 ? '/' : p.substring(0, idx);
+                }
+
+                function joinPath(base, name) {
+                    return base.replace(/\/+$/, '') + '/' + name;
+                }
+
                 function escapeHtml(str) {
                     return String(str)
                         .replace(/&/g, '&amp;')
