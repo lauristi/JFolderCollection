@@ -21,11 +21,11 @@
     <Compile Remove="Controllers\FolderController.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Jellyfin.Controller" Version="10.11.0" />
-    <PackageReference Include="Jellyfin.Model" Version="10.11.0" />
-    <PackageReference Include="MediaBrowser.Common" Version="4.9.1.90" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Jellyfin.Controller" Version="10.11.0" PrivateAssets="All" />
+		<PackageReference Include="Jellyfin.Model" Version="10.11.0" PrivateAssets="All" />
+		<PackageReference Include="MediaBrowser.Common" Version="4.9.1.90" PrivateAssets="All" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="Configuration\configPage.html" />

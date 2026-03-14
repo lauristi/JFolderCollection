@@ -18,6 +18,7 @@ pipeline {
                 ])
             }
         }
+
         stage('01.1 - Versioning') {
             steps {
                 script {
@@ -28,15 +29,19 @@ pipeline {
                 }
             }
         }
+
         stage('02- Build Plugin') {
             steps {
                 script {
-                    echo "🛠️ Compilando via Dockerfile..."
                     sh "docker build --no-cache --pull --build-arg VERSION=1.0.0.${env.BUILD_NUMBER} -t jfolder-builder:latest ."
                     sh "docker create --name temp-jfolder jfolder-builder:latest"
                     sh "mkdir -p ./publish"
-                    sh "docker cp temp-jfolder:/app/. ./publish"
+                    sh "docker cp temp-jfolder:/app/. ./publish/"
                     sh "docker rm temp-jfolder"
+            
+                    // Valida que os arquivos realmente chegaram antes de prosseguir
+                    sh "ls -la ./publish/"
+                    sh "test -f ./publish/JFolderCollection.dll || (echo '❌ DLL não encontrada no publish!' && exit 1)"
                 }
             }
         }
