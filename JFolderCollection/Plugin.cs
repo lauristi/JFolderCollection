@@ -21,6 +21,10 @@
         {
             Instance = this;
             Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [JFolderCollection] 🎯 Plugin construído com sucesso.");
+            
+            // Diagnóstico
+            foreach (var name in GetType().Assembly.GetManifestResourceNames())
+                Console.WriteLine($"[JFolderCollection] Resource: {name}");
         }
 
         /// <summary>
