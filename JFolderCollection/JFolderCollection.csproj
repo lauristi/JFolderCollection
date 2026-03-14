@@ -17,6 +17,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\CollectionController.cs" />
+    <Compile Remove="Controllers\FolderController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Jellyfin.Controller" Version="10.11.0" />
     <PackageReference Include="Jellyfin.Model" Version="10.11.0" />
     <PackageReference Include="MediaBrowser.Common" Version="4.9.1.90" />
@@ -39,9 +44,6 @@
 	<ItemGroup>
 		<EmbeddedResource Include="Images\plugin-thumbnail.png" />
 		<EmbeddedResource Include="Images\plugin-icon.png" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="MediaBrowser\Model\" />
 	</ItemGroup>
 
 </Project>

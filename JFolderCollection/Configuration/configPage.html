@@ -5,140 +5,208 @@
     <title>JFolderCollection Config</title>
 </head>
 <body>
-    <div id="TemplateConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox,directorybrowser">
+    <div id="JFolderConfigPage"
+         data-role="page"
+         class="page type-interior pluginConfigurationPage"
+         data-require="emby-input,emby-button,emby-select,emby-checkbox,directorybrowser">
+
         <div data-role="content">
             <div class="content-primary">
 
-                <h2>JFolderCollection vBUILD_VERSION</h2>
+                <h2>JFolderCollection</h2>
 
-                <form id="TemplateConfigForm">
+                <form id="JFolderConfigForm">
 
+                    <!-- ═══════════════════════════════════════════════
+                         SEÇÃO 1: Diretórios
+                    ═══════════════════════════════════════════════ -->
                     <div class="verticalSection">
                         <h2 class="sectionTitle">Diretórios do Servidor</h2>
 
                         <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="BaseFolderPath">Caminho da Coleção de Filmes</label>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <input id="BaseFolderPath" name="BaseFolderPath" type="text" is="emby-input" />
+                            <label class="inputLabel inputLabelUnfocused" for="BaseFolderPath">
+                                Caminho da Coleção de Filmes
+                            </label>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <input id="BaseFolderPath" name="BaseFolderPath" type="text" is="emby-input" style="flex:1;" />
                                 <button type="button" is="emby-button" class="raised button-submit" id="browseBaseFolder">
                                     <span>Browse</span>
                                 </button>
                             </div>
-                            <div class="fieldDescription">Informe o caminho onde os filmes estão organizados por pastas.</div>
+                            <div class="fieldDescription">
+                                Diretório raiz onde as pastas de coleções estão organizadas.
+                                Cada subpasta representa uma coleção.
+                            </div>
                         </div>
 
                         <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="PosterFolderPath">Caminho dos Posters</label>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <input id="PosterFolderPath" name="PosterFolderPath" type="text" is="emby-input" />
+                            <label class="inputLabel inputLabelUnfocused" for="PosterFolderPath">
+                                Caminho dos Posters
+                            </label>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <input id="PosterFolderPath" name="PosterFolderPath" type="text" is="emby-input" style="flex:1;" />
                                 <button type="button" is="emby-button" class="raised button-submit" id="browsePosterFolder">
                                     <span>Browse</span>
                                 </button>
                             </div>
-                            <div class="fieldDescription">Pasta contendo os arquivos .png (mesmo nome da pasta do filme).</div>
+                            <div class="fieldDescription">
+                                Pasta com arquivos .png nomeados igual à pasta da coleção correspondente.
+                            </div>
                         </div>
                     </div>
 
+                    <!-- ═══════════════════════════════════════════════
+                         SEÇÃO 2: Regras de Processamento
+                    ═══════════════════════════════════════════════ -->
                     <div class="verticalSection">
                         <h2 class="sectionTitle">Regras de Processamento</h2>
 
                         <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="PrefixAtual">Buscar por (Prefixo)</label>
-                            <input id="PrefixAtual" type="text" is="emby-input" />
+                            <label class="inputLabel inputLabelUnfocused" for="PrefixAtual">
+                                Buscar por (Prefixo)
+                            </label>
+                            <input id="PrefixAtual" name="PrefixAtual" type="text" is="emby-input" />
                         </div>
 
                         <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="PrefixNovo">Substituir por</label>
-                            <input id="PrefixNovo" type="text" is="emby-input" />
+                            <label class="inputLabel inputLabelUnfocused" for="PrefixNovo">
+                                Substituir por
+                            </label>
+                            <input id="PrefixNovo" name="PrefixNovo" type="text" is="emby-input" />
                         </div>
 
                         <div class="checkboxContainer">
                             <label class="checkboxLabel">
-                                <input type="checkbox" is="emby-checkbox" id="OnlyNew" checked />
-                                <span>Criar apenas novas coleções</span>
+                                <input type="checkbox" is="emby-checkbox" id="OnlyNew" />
+                                <span>Criar apenas novas coleções (pular existentes)</span>
                             </label>
                         </div>
 
                         <div class="checkboxContainer">
                             <label class="checkboxLabel">
                                 <input type="checkbox" is="emby-checkbox" id="ApagarTudo" />
-                                <span>Apagar todas as coleções atuais antes de criar</span>
+                                <span>Apagar todas as coleções antes de criar</span>
                             </label>
                         </div>
                     </div>
 
+                    <!-- ═══════════════════════════════════════════════
+                         SEÇÃO 3: Executar
+                    ═══════════════════════════════════════════════ -->
                     <div class="verticalSection">
-                        <button id="createCollectionsBtn" is="emby-button" type="button" class="raised block emby-button" style="background-color: #2e7d32; color: white; padding: 0.8em; font-weight: bold;">
+                        <button id="createCollectionsBtn"
+                                is="emby-button"
+                                type="button"
+                                class="raised block emby-button"
+                                style="background-color:#2e7d32; color:white; padding:0.8em; font-weight:bold;">
                             <span>EXECUTAR CRIAÇÃO DE COLEÇÕES</span>
                         </button>
                     </div>
 
+                    <!-- ═══════════════════════════════════════════════
+                         SEÇÃO 4: Ferramentas
+                    ═══════════════════════════════════════════════ -->
                     <div class="verticalSection">
                         <h2 class="sectionTitle">Ferramentas</h2>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
                             <button id="loadFoldersBtn" is="emby-button" type="button" class="raised emby-button">
                                 <span>Listar Pastas</span>
                             </button>
-                            <button id="findDuplicatesBtn" is="emby-button" type="button" class="raised emby-button" style="background-color: #2e7d32; color: white;">
+                            <button id="findDuplicatesBtn" is="emby-button" type="button" class="raised emby-button"
+                                    style="background-color:#1565c0; color:white;">
                                 <span>Buscar Duplicados</span>
                             </button>
                         </div>
 
-                        <div id="folderListContainer" style="display: none; margin-bottom: 20px;">
-                            <div class="paperList" style="max-height: 300px; overflow-y: auto;">
-                                <ul id="folderList" class="itemsContainer vertical-list"></ul>
+                        <!-- Resultado: lista de pastas -->
+                        <div id="folderListContainer" style="display:none; margin-bottom:20px;">
+                            <h3 class="sectionTitle" style="font-size:0.9em;">Pastas encontradas</h3>
+                            <div class="paperList" style="max-height:300px; overflow-y:auto;">
+                                <ul id="folderList" class="itemsContainer vertical-list"
+                                    style="list-style:none; padding:0; margin:0;"></ul>
                             </div>
                         </div>
 
-                        <div id="duplicatesListContainer" style="display: none; margin-bottom: 20px;">
-                            <div id="duplicatesList" class="itemsContainer vertical-list"></div>
+                        <!-- Resultado: duplicados -->
+                        <div id="duplicatesListContainer" style="display:none; margin-bottom:20px;">
+                            <h3 class="sectionTitle" style="font-size:0.9em;">Filmes duplicados</h3>
+                            <div id="duplicatesList"></div>
                         </div>
                     </div>
 
-                    <div style="margin-top: 2em; border-top: 1px solid #333; padding-top: 1em;">
+                    <!-- ═══════════════════════════════════════════════
+                         SALVAR CONFIGURAÇÕES
+                    ═══════════════════════════════════════════════ -->
+                    <div style="margin-top:2em; border-top:1px solid #333; padding-top:1em;">
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Salvar Configurações</span>
                         </button>
                     </div>
+
                 </form>
             </div>
         </div>
 
         <script type="text/javascript">
+            // CORREÇÃO CRÍTICA: Script unificado em um único bloco IIFE.
+            // O script duplicado causava duplo registro de listeners e sobrescrita de funções,
+            // resultando em comportamento imprevisível e botões que não respondiam.
             (function () {
-                const pluginId = "c7b8d1b3-41d9-4a19-b04e-f43534455342";
+                'use strict';
 
-                document.querySelector('#TemplateConfigPage').addEventListener('pageshow', function () {
-                    Dashboard.showLoadingMsg();
+                const PLUGIN_ID = 'c7b8d1b3-41d9-4a19-b04e-f43534455342';
+
+                // ─────────────────────────────────────────────────────
+                // INICIALIZAÇÃO: Executado ao abrir a página de config
+                // ─────────────────────────────────────────────────────
+                document.querySelector('#JFolderConfigPage').addEventListener('pageshow', function () {
                     const page = this;
+                    Dashboard.showLoadingMsg();
 
-                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (config) {
                         page.querySelector('#BaseFolderPath').value = config.BaseFolderPath || '';
                         page.querySelector('#PosterFolderPath').value = config.PosterFolderPath || '';
                         page.querySelector('#PrefixAtual').value = config.PrefixAtual || '';
                         page.querySelector('#PrefixNovo').value = config.PrefixNovo || '';
                         page.querySelector('#ApagarTudo').checked = config.ApagarTudo || false;
-                        page.querySelector('#OnlyNew').checked = config.OnlyNew !== undefined ? config.OnlyNew : true;
+                        // OnlyNew tem default true; só usa false se explicitamente salvo como false.
+                        page.querySelector('#OnlyNew').checked = (config.OnlyNew !== false);
                         Dashboard.hideLoadingMsg();
                     });
 
-                    page.querySelector('#browseBaseFolder').onclick = function () { openDirectoryBrowser('BaseFolderPath'); };
-                    page.querySelector('#browsePosterFolder').onclick = function () { openDirectoryBrowser('PosterFolderPath'); };
+                    // CORREÇÃO: Passamos 'page' para openDirectoryBrowser para usar
+                    // page.querySelector em vez de document.getElementById.
+                    // Isso evita conflitos se o Jellyfin mantiver múltiplas páginas no DOM.
+                    page.querySelector('#browseBaseFolder').addEventListener('click', function () {
+                        openDirectoryBrowser(page, 'BaseFolderPath');
+                    });
+                    page.querySelector('#browsePosterFolder').addEventListener('click', function () {
+                        openDirectoryBrowser(page, 'PosterFolderPath');
+                    });
 
-                    page.querySelector('#createCollectionsBtn').onclick = executeCreateCollections;
-                    page.querySelector('#findDuplicatesBtn').onclick = loadDuplicateMovies;
-                    page.querySelector('#loadFoldersBtn').onclick = loadFolders;
+                    page.querySelector('#createCollectionsBtn').addEventListener('click', function () {
+                        executeCreateCollections(page);
+                    });
+                    page.querySelector('#loadFoldersBtn').addEventListener('click', function () {
+                        loadFolders(page);
+                    });
+                    page.querySelector('#findDuplicatesBtn').addEventListener('click', function () {
+                        loadDuplicateMovies(page);
+                    });
 
-                    page.querySelector('#TemplateConfigForm').onsubmit = function (e) {
+                    page.querySelector('#JFolderConfigForm').addEventListener('submit', function (e) {
                         e.preventDefault();
                         saveSettings(page);
-                        return false;
-                    };
+                    });
                 });
 
+                // ─────────────────────────────────────────────────────
+                // SALVAR CONFIGURAÇÕES
+                // ─────────────────────────────────────────────────────
                 function saveSettings(page) {
                     Dashboard.showLoadingMsg();
-                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (config) {
                         config.BaseFolderPath = page.querySelector('#BaseFolderPath').value;
                         config.PosterFolderPath = page.querySelector('#PosterFolderPath').value;
                         config.PrefixAtual = page.querySelector('#PrefixAtual').value;
@@ -146,193 +214,63 @@
                         config.ApagarTudo = page.querySelector('#ApagarTudo').checked;
                         config.OnlyNew = page.querySelector('#OnlyNew').checked;
 
-                        ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
+                        ApiClient.updatePluginConfiguration(PLUGIN_ID, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
                         });
                     });
                 }
 
-                function executeCreateCollections() {
-                    const deleteAll = document.getElementById('ApagarTudo').checked;
-                    if (!confirm("Deseja iniciar a criação das coleções agora?")) return;
+                // ─────────────────────────────────────────────────────
+                // EXECUTAR CRIAÇÃO DE COLEÇÕES
+                // ─────────────────────────────────────────────────────
+                function executeCreateCollections(page) {
+                    var deleteAll = page.querySelector('#ApagarTudo').checked;
 
-                    if (deleteAll) {
-                        if (!confirm("⚠️ ATENÇÃO: Você marcou para APAGAR TODAS as coleções existentes. Deseja continuar?")) {
-                            return;
-                        }
-                    }
+                    if (!confirm('Deseja iniciar a criação das coleções agora?')) return;
 
-                    const props = {
-                        currentPrefix: document.getElementById('PrefixAtual').value,
-                        newPrefix: document.getElementById('PrefixNovo').value,
-                        baseFolderPath: document.getElementById('BaseFolderPath').value,
-                        posterFolderPath: document.getElementById('PosterFolderPath').value,
-                        deleteAll: deleteAll,
-                        onlyNew: document.getElementById('OnlyNew').checked
-                    };
-
-                    Dashboard.showLoadingMsg();
-                    const url = ApiClient.getUrl('Plugin/Folder/CreateCollections');
-
-                    ApiClient.fetch({
-                        url: url,
-                        type: 'POST',
-                        data: JSON.stringify(props),
-                        contentType: 'application/json'
-                    }).then(function (res) {
-                        Dashboard.hideLoadingMsg();
-                        Dashboard.alert("✅ Operação finalizada!");
-                    }).catch(function (err) {
-                        Dashboard.hideLoadingMsg();
-                        Dashboard.alert("❌ Erro: " + err);
-                    });
-                }
-
-                function openDirectoryBrowser(inputId) {
-                    const input = document.getElementById(inputId);
-                    require(['directorybrowser'], function (DirectoryBrowser) {
-                        const picker = new DirectoryBrowser();
-                        picker.show({
-                            callback: function (path) {
-                                if (path) { input.value = path; }
-                                picker.close();
-                            },
-                            path: input.value,
-                            validateWriteable: false
-                        });
-                    });
-                }
-
-                function loadFolders() {
-                    const path = document.getElementById('BaseFolderPath').value;
-                    // O Jellyfin resolve as rotas dos plugins via ApiClient
-                    const url = ApiClient.getUrl('Plugin/Folder/Subfolders', { path: path });
-
-                    Dashboard.showLoadingMsg();
-                    ApiClient.getJSON(url).then(function (folders) {
-                        const list = document.getElementById('folderList');
-                        list.innerHTML = folders.map(f => `<li>${f}</li>`).join('');
-                        document.getElementById('folderListContainer').style.display = 'block';
-                        Dashboard.hideLoadingMsg();
-                    }).catch(function () {
-                        Dashboard.hideLoadingMsg();
-                        Dashboard.alert("Erro ao listar pastas. Verifique o caminho.");
-                    });
-                }
-
-                function loadDuplicateMovies() {
-                    const path = document.getElementById('BaseFolderPath').value;
-                    const url = ApiClient.getUrl('Plugin/Folder/DuplicateMovies', { path: path });
-
-                    Dashboard.showLoadingMsg();
-                    ApiClient.getJSON(url).then(function (result) {
-                        const container = document.getElementById('duplicatesListContainer');
-                        const list = document.getElementById('duplicatesList');
-
-                        if (result.Duplicates.length === 0) {
-                            list.innerHTML = '<p>Nenhum duplicado encontrado.</p>';
-                        } else {
-                            list.innerHTML = result.Duplicates.map(d => `
-                        <div style="margin-bottom:10px; border-bottom:1px solid #444;">
-                            <strong>${d.MovieName}</strong> (${d.Count} cópias)<br />
-                            <small>${d.Locations.join('<br />')}</small>
-                        </div>
-                    `).join('');
-                        }
-                        container.style.display = 'block';
-                        Dashboard.hideLoadingMsg();
-                    });
-                }
-
-            })();
-        </script>
-        <script type="text/javascript">
-            (function () {
-                const pluginId = "c7b8d1b3-41d9-4a19-b04e-f43534455342";
-
-                document.querySelector('#TemplateConfigPage').addEventListener('pageshow', function () {
-                    Dashboard.showLoadingMsg();
-                    const page = this;
-
-                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
-                        page.querySelector('#BaseFolderPath').value = config.BaseFolderPath || '';
-                        page.querySelector('#PosterFolderPath').value = config.PosterFolderPath || '';
-                        page.querySelector('#PrefixAtual').value = config.PrefixAtual || '';
-                        page.querySelector('#PrefixNovo').value = config.PrefixNovo || '';
-                        page.querySelector('#ApagarTudo').checked = config.ApagarTudo || false;
-                        page.querySelector('#OnlyNew').checked = config.OnlyNew !== undefined ? config.OnlyNew : true;
-                        Dashboard.hideLoadingMsg();
-                    });
-
-                    page.querySelector('#browseBaseFolder').onclick = function () { openDirectoryBrowser(page, 'BaseFolderPath'); };
-                    page.querySelector('#browsePosterFolder').onclick = function () { openDirectoryBrowser(page, 'PosterFolderPath'); };
-
-                    page.querySelector('#createCollectionsBtn').onclick = executeCreateCollections;
-                    page.querySelector('#findDuplicatesBtn').onclick = loadDuplicateMovies;
-                    page.querySelector('#loadFoldersBtn').onclick = loadFolders;
-
-                    page.querySelector('#TemplateConfigForm').onsubmit = function (e) {
-                        e.preventDefault();
-                        saveSettings(page);
-                        return false;
-                    };
-                });
-
-                function saveSettings(page) {
-                    Dashboard.showLoadingMsg();
-                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
-                        config.BaseFolderPath = page.querySelector('#BaseFolderPath').value;
-                        config.PosterFolderPath = page.querySelector('#PosterFolderPath').value;
-                        config.PrefixAtual = page.querySelector('#PrefixAtual').value;
-                        config.PrefixNovo = page.querySelector('#PrefixNovo').value;
-                        config.ApagarTudo = page.querySelector('#ApagarTudo').checked;
-                        config.OnlyNew = page.querySelector('#OnlyNew').checked;
-
-                        ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
-                            Dashboard.processPluginConfigurationUpdateResult(result);
-                        });
-                    });
-                }
-
-                function executeCreateCollections() {
-                    const deleteAll = document.getElementById('ApagarTudo').checked;
-                    if (!confirm("Deseja iniciar a criação das coleções agora?")) return;
-
-                    if (deleteAll && !confirm("⚠️ ATENÇÃO: Você marcou para APAGAR TODAS as coleções existentes. Deseja continuar?")) {
+                    if (deleteAll && !confirm('⚠️ ATENÇÃO: Você marcou APAGAR TODAS as coleções existentes. Deseja continuar?')) {
                         return;
                     }
 
-                    const props = {
-                        currentPrefix: document.getElementById('PrefixAtual').value,
-                        newPrefix: document.getElementById('PrefixNovo').value,
-                        baseFolderPath: document.getElementById('BaseFolderPath').value,
-                        posterFolderPath: document.getElementById('PosterFolderPath').value,
+                    var requestBody = {
+                        currentPrefix: page.querySelector('#PrefixAtual').value,
+                        newPrefix: page.querySelector('#PrefixNovo').value,
+                        baseFolderPath: page.querySelector('#BaseFolderPath').value,
+                        posterFolderPath: page.querySelector('#PosterFolderPath').value,
                         deleteAll: deleteAll,
-                        onlyNew: document.getElementById('OnlyNew').checked
+                        onlyNew: page.querySelector('#OnlyNew').checked
                     };
 
                     Dashboard.showLoadingMsg();
-                    const url = ApiClient.getUrl('Plugin/Folder/CreateCollections');
 
-                    ApiClient.fetch({
-                        url: url,
-                        type: 'POST',
-                        data: JSON.stringify(props),
+                    // CORREÇÃO: 'method' em vez de 'type'.
+                    // No Jellyfin 10.8+, o ApiClient.ajax/fetch usa 'method' (padrão fetch/XHR moderno).
+                    // 'type' era nomenclatura do jQuery.ajax e não é reconhecido aqui.
+                    ApiClient.ajax({
+                        url: ApiClient.getUrl('Plugin/Folder/CreateCollections'),
+                        method: 'POST',
+                        data: JSON.stringify(requestBody),
                         contentType: 'application/json'
                     }).then(function () {
                         Dashboard.hideLoadingMsg();
-                        Dashboard.alert("✅ Operação finalizada!");
+                        Dashboard.alert('✅ Operação finalizada com sucesso!');
                     }).catch(function (err) {
                         Dashboard.hideLoadingMsg();
-                        Dashboard.alert("❌ Erro: " + err);
+                        Dashboard.alert('❌ Erro ao criar coleções: ' + (err.statusText || err));
                     });
                 }
 
+                // ─────────────────────────────────────────────────────
+                // BROWSER DE DIRETÓRIO
+                // ─────────────────────────────────────────────────────
                 function openDirectoryBrowser(page, inputId) {
-                    const input = page.querySelector('#' + inputId);
-                    // Jellyfin 10.8+ utiliza o sistema global para abrir o seletor
-                    window.require(['directorybrowser'], function (DirectoryBrowser) {
-                        const picker = new DirectoryBrowser();
+                    var input = page.querySelector('#' + inputId);
+
+                    // CORREÇÃO: 'require' (global AMD do Jellyfin), não 'window.require'.
+                    // O Jellyfin injeta o require do RequireJS como global — window.require
+                    // não existe neste contexto e causa falha silenciosa.
+                    require(['directorybrowser'], function (DirectoryBrowser) {
+                        var picker = new DirectoryBrowser();
                         picker.show({
                             callback: function (path) {
                                 if (path) {
@@ -346,53 +284,99 @@
                     });
                 }
 
-                function loadFolders() {
-                    const path = document.getElementById('BaseFolderPath').value;
-                    const url = ApiClient.getUrl('Plugin/Folder/Subfolders', { path: path });
+                // ─────────────────────────────────────────────────────
+                // LISTAR PASTAS
+                // ─────────────────────────────────────────────────────
+                function loadFolders(page) {
+                    var path = page.querySelector('#BaseFolderPath').value;
+
+                    if (!path) {
+                        Dashboard.alert('Informe o caminho da coleção antes de listar as pastas.');
+                        return;
+                    }
 
                     Dashboard.showLoadingMsg();
-                    ApiClient.getJSON(url).then(function (folders) {
-                        const list = document.getElementById('folderList');
-                        let html = '';
-                        for (let i = 0; i < folders.length; i++) {
-                            html += '<li>' + folders[i] + '</li>';
-                        }
-                        list.innerHTML = html;
-                        document.getElementById('folderListContainer').style.display = 'block';
-                        Dashboard.hideLoadingMsg();
-                    }).catch(function () {
-                        Dashboard.hideLoadingMsg();
-                        Dashboard.alert("Erro ao listar pastas. Verifique o caminho.");
-                    });
-                }
 
-                function loadDuplicateMovies() {
-                    const path = document.getElementById('BaseFolderPath').value;
-                    const url = ApiClient.getUrl('Plugin/Folder/DuplicateMovies', { path: path });
+                    ApiClient.getJSON(ApiClient.getUrl('Plugin/Folder/Subfolders', { path: path }))
+                        .then(function (folders) {
+                            var list = page.querySelector('#folderList');
 
-                    Dashboard.showLoadingMsg();
-                    ApiClient.getJSON(url).then(function (result) {
-                        const list = document.getElementById('duplicatesList');
-                        if (!result.Duplicates || result.Duplicates.length === 0) {
-                            list.innerHTML = '<p>Nenhum duplicado encontrado.</p>';
-                        } else {
-                            let html = '';
-                            for (let i = 0; i < result.Duplicates.length; i++) {
-                                const d = result.Duplicates[i];
-                                html += '<div style="margin-bottom:10px; border-bottom:1px solid #444; padding-bottom:5px;">';
-                                html += '<strong>' + d.MovieName + '</strong> (' + d.Count + ' cópias)<br />';
-                                html += '<small style="color:#aaa;">' + d.Locations.join('<br />') + '</small>';
-                                html += '</div>';
+                            if (!folders || folders.length === 0) {
+                                list.innerHTML = '<li style="padding:8px; color:#aaa;">Nenhuma pasta encontrada.</li>';
+                            } else {
+                                list.innerHTML = folders.map(function (f) {
+                                    return '<li style="padding:4px 8px;">' + escapeHtml(f) + '</li>';
+                                }).join('');
                             }
-                            list.innerHTML = html;
-                        }
-                        document.getElementById('duplicatesListContainer').style.display = 'block';
-                        Dashboard.hideLoadingMsg();
-                    }).catch(function () {
-                        Dashboard.hideLoadingMsg();
-                        Dashboard.alert("Erro ao buscar duplicados.");
-                    });
+
+                            page.querySelector('#folderListContainer').style.display = 'block';
+                            Dashboard.hideLoadingMsg();
+                        })
+                        .catch(function () {
+                            Dashboard.hideLoadingMsg();
+                            Dashboard.alert('Erro ao listar pastas. Verifique o caminho informado.');
+                        });
                 }
+
+                // ─────────────────────────────────────────────────────
+                // BUSCAR DUPLICADOS
+                // ─────────────────────────────────────────────────────
+                function loadDuplicateMovies(page) {
+                    var path = page.querySelector('#BaseFolderPath').value;
+
+                    if (!path) {
+                        Dashboard.alert('Informe o caminho da coleção antes de buscar duplicados.');
+                        return;
+                    }
+
+                    Dashboard.showLoadingMsg();
+
+                    ApiClient.getJSON(ApiClient.getUrl('Plugin/Folder/DuplicateMovies', { path: path }))
+                        .then(function (result) {
+                            var list = page.querySelector('#duplicatesList');
+
+                            // Verificação defensiva: result pode ser null em caso de erro HTTP
+                            // que não disparou o .catch (comportamento do ApiClient em algumas versões).
+                            if (!result || !result.Duplicates || result.Duplicates.length === 0) {
+                                list.innerHTML = '<p style="color:#aaa;">Nenhum duplicado encontrado. Total escaneado: '
+                                    + (result ? result.TotalMoviesScanned : 0) + ' arquivos.</p>';
+                            } else {
+                                var html = '<p style="color:#aaa; margin-bottom:10px;">Total escaneado: '
+                                    + result.TotalMoviesScanned + ' arquivos. Grupos duplicados: '
+                                    + result.Duplicates.length + '</p>';
+
+                                html += result.Duplicates.map(function (d) {
+                                    return '<div style="margin-bottom:10px; border-bottom:1px solid #444; padding-bottom:8px;">'
+                                        + '<strong>' + escapeHtml(d.MovieName) + '</strong>'
+                                        + ' <span style="color:#e57373;">(' + d.Count + ' cópias)</span><br/>'
+                                        + '<small style="color:#aaa;">' + d.Locations.map(escapeHtml).join('<br/>') + '</small>'
+                                        + '</div>';
+                                }).join('');
+
+                                list.innerHTML = html;
+                            }
+
+                            page.querySelector('#duplicatesListContainer').style.display = 'block';
+                            Dashboard.hideLoadingMsg();
+                        })
+                        .catch(function () {
+                            Dashboard.hideLoadingMsg();
+                            Dashboard.alert('Erro ao buscar duplicados. Verifique o caminho informado.');
+                        });
+                }
+
+                // ─────────────────────────────────────────────────────
+                // UTILITÁRIO: Sanitiza strings antes de inserir no innerHTML.
+                // Evita XSS caso nomes de pastas contenham caracteres especiais HTML.
+                // ─────────────────────────────────────────────────────
+                function escapeHtml(str) {
+                    return String(str)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;');
+                }
+
             })();
         </script>
     </div>

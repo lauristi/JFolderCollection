@@ -6,8 +6,6 @@ using System.Net.Mime;
 
 namespace JFolderCollection.Controllers
 {
-    // O segredo no Jellyfin é que o nome da classe deve terminar em "Controller"
-    // e ela PRECISA ser pública.
     [ApiController]
     [Route("Plugin/Folder")]
     [Produces(MediaTypeNames.Application.Json)]
@@ -22,7 +20,7 @@ namespace JFolderCollection.Controllers
         {
             _logger = logger;
             _config = configurationManager.GetConfiguration<PluginConfiguration>(nameof(PluginConfiguration))
-                      ?? new PluginConfiguration();
+                                                            ?? new PluginConfiguration();
         }
 
         [HttpGet("Subfolders")]

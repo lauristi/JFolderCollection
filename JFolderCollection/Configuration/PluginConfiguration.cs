@@ -1,86 +1,58 @@
-﻿namespace JFolderCollection.Configuration
+﻿using MediaBrowser.Model.Plugins;
+
+namespace JFolderCollection.Configuration
 {
-    using MediaBrowser.Model.Plugins;
-
-    #region Enumerações
-
     /// <summary>
-    /// Define as opções de configuração disponíveis para o plugin.
-    /// Útil para criar seletores (dropdowns) na interface administrativa.
-    /// </summary>
-    public enum SomeOptions
-    {
-        /// <summary>
-        /// Representa a primeira opção de configuração.
-        /// </summary>
-        OneOption,
-
-        /// <summary>
-        /// Representa a segunda opção de configuração.
-        /// </summary>
-        AnotherOption,
-    }
-
-    #endregion Enumerações
-
-    /// <summary>
-    /// Classe que define a estrutura de dados das configurações do plugin.
-    /// O Jellyfin serializa esta classe automaticamente em um arquivo XML.
+    /// Estrutura de dados persistida pelo Jellyfin em XML para o plugin JFolderCollection.
+    /// O Jellyfin serializa e desserializa esta classe automaticamente via IXmlSerializer.
+    /// Apenas propriedades públicas com getter e setter são persistidas.
     /// </summary>
     public class PluginConfiguration : BasePluginConfiguration
     {
-        #region Propriedades de Configuração
+        #region Caminhos de Diretório
 
         /// <summary>
-        /// Obtém ou define um valor que indica se uma funcionalidade específica está ativa.
+        /// Caminho físico do diretório raiz onde as pastas de coleções estão organizadas.
+        /// Cada subpasta representa uma coleção; cada subpasta dentro dela representa um filme.
         /// </summary>
-        public bool TrueFalseSetting { get; set; }
+        public string BaseFolderPath { get; set; } = "/mnt/xs1000/Filmes/Filmes Colecoes";
 
         /// <summary>
-        /// Obtém ou define um valor numérico inteiro de configuração.
+        /// Caminho físico do diretório de posters.
+        /// Cada arquivo .png deve ter o mesmo nome que a pasta da coleção correspondente.
+        /// Exemplo: "Coleção Ação.png" para a pasta "Coleção Ação".
         /// </summary>
-        public int AnInteger { get; set; }
+        public string PosterFolderPath { get; set; } = "/mnt/xs1000/Filmes/Poster";
+
+        #endregion Caminhos de Diretório
+
+        #region Regras de Processamento
 
         /// <summary>
-        /// Obtém ou define uma string genérica de configuração.
+        /// Texto a ser encontrado e substituído no início do nome da pasta.
+        /// Deixe vazio para desabilitar a substituição de prefixo.
         /// </summary>
-        public string AString { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Obtém ou define a opção selecionada a partir da enumeração <see cref="SomeOptions"/>.
-        /// </summary>
-        public SomeOptions Options { get; set; }
-
-        /// <summary>
-        /// Obtém ou define o caminho base do diretório de mídia que o plugin deve processar.
-        /// </summary>
-        public string BaseFolderPath { get; set; } = string.Empty;
-        public string PosterFolderPath { get; set; } = string.Empty;
         public string PrefixAtual { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Texto pelo qual o <see cref="PrefixAtual"/> será substituído.
+        /// Deixe vazio para desabilitar a substituição de prefixo.
+        /// </summary>
         public string PrefixNovo { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Se verdadeiro, apaga todas as coleções existentes antes de criar as novas.
+        /// ATENÇÃO: operação destrutiva e irreversível.
+        /// </summary>
         public bool ApagarTudo { get; set; } = false;
+
+        /// <summary>
+        /// Se verdadeiro, apenas cria coleções para pastas que ainda não possuem
+        /// uma coleção correspondente na biblioteca do Jellyfin.
+        /// Recomendado para execuções incrementais.
+        /// </summary>
         public bool OnlyNew { get; set; } = true;
 
-        #endregion Propriedades de Configuração
-
-        #region Inicialização
-
-        /// <summary>
-        /// Inicializa uma nova instância da classe <see cref="PluginConfiguration"/> com valores padrão.
-        /// </summary>
-        public PluginConfiguration()
-        {
-            // Definição dos valores padrão (Default Settings)
-            Options = SomeOptions.AnotherOption;
-            TrueFalseSetting = true;
-            AnInteger = 2;
-            AString = "string";
-
-            // Caminho padrão conforme estrutura do servidor
-            BaseFolderPath = "/mnt/xs1000/Filmes/Filmes Colecoes";
-            PosterFolderPath = "/mnt/xs1000/Filmes/Poster";
-        }
-
-        #endregion Inicialização
+        #endregion Regras de Processamento
     }
 }
